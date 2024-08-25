@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporalio.Graphs.Tests", "Temporalio.Graphs.Tests\Temporalio.Graphs.Tests.csproj", "{FBCE00C5-9FAF-4407-A44C-A50AF277872E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporalio.Graphs", "Temporalio.Graphs\Temporalio.Graphs.csproj", "{D6060409-BE17-4669-8AD9-C4BDBF6CB47D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{8BAA470D-5668-4E60-BD0C-098B8DDEA681}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransferClient", "Samples\MoneyTransferClient\MoneyTransferClient.csproj", "{A245AB04-C7F0-4795-8BEC-118E4556151B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransferWorker", "Samples\MoneyTransferWorker\MoneyTransferWorker.csproj", "{6D424673-7CCE-4CBF-8423-96827565DC52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBCE00C5-9FAF-4407-A44C-A50AF277872E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBCE00C5-9FAF-4407-A44C-A50AF277872E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBCE00C5-9FAF-4407-A44C-A50AF277872E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBCE00C5-9FAF-4407-A44C-A50AF277872E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6060409-BE17-4669-8AD9-C4BDBF6CB47D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6060409-BE17-4669-8AD9-C4BDBF6CB47D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6060409-BE17-4669-8AD9-C4BDBF6CB47D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6060409-BE17-4669-8AD9-C4BDBF6CB47D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A245AB04-C7F0-4795-8BEC-118E4556151B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A245AB04-C7F0-4795-8BEC-118E4556151B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A245AB04-C7F0-4795-8BEC-118E4556151B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A245AB04-C7F0-4795-8BEC-118E4556151B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D424673-7CCE-4CBF-8423-96827565DC52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D424673-7CCE-4CBF-8423-96827565DC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D424673-7CCE-4CBF-8423-96827565DC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D424673-7CCE-4CBF-8423-96827565DC52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A245AB04-C7F0-4795-8BEC-118E4556151B} = {8BAA470D-5668-4E60-BD0C-098B8DDEA681}
+		{6D424673-7CCE-4CBF-8423-96827565DC52} = {8BAA470D-5668-4E60-BD0C-098B8DDEA681}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A7F5F718-547F-479B-BB8F-E285CB0CD929}
+	EndGlobalSection
+EndGlobal

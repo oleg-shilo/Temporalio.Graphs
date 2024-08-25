@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MoneyTransferWorker": {
+      "commandName": "Project",
+      "commandLineArgs": "-graph -path:0"
+    }
+  }
+}
