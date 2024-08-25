@@ -83,9 +83,9 @@ class TestWorkflowDecisions : DecisionsBase
 public class TestWorkflowActivities
 {
     [Activity]
-    public static async Task<string> StepAAsync() => null;
+    public static async Task<string> StepAAsync() => "";
     [Activity]
-    public static async Task<string> StepBAsync() => null;
+    public static async Task<string> StepBAsync() => "";
     [Activity]
-    public static async Task<string> StepDAsync() => null;
+    public static async Task<string> StepDAsync() => "";
 }
