@@ -6,17 +6,14 @@ When it comes to the WorkFlow (WF) engines. Many of them flw
 
 ### Graphs
 
-```
-Start > Withdraw > decision1{NeedToConvert}:no > decision0{IsTFN_Known}:yes > NotifyAto > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:no > decision0{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:yes > CurrencyConvert > decision0{IsTFN_Known}:yes > NotifyAto > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:yes > CurrencyConvert > decision0{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
-```
+The 
 
 ### The whole DAG
 
 ```mermaid
+%%{init: {'securityLevel': 'loose'}}%%
 flowchart LR
+  A[This is an <b>important</b> <a href='https://google.com'>link</a>]
 s((Start)) --> Withdraw --> decision2{NeedToConvert} -- yes --> CurrencyConvert --> decision1{IsTFN_Known} -- yes --> NotifyAto --> Deposit --> e((End))
 decision1{IsTFN_Known} -- no --> TakeNonResidentTax --> Deposit
 decision2{NeedToConvert} -- no --> decision1{IsTFN_Known}

@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Temporalio.Graph;
+using Temporalio.Graphs;
 
 namespace Temporalio.MoneyTransferProject.MoneyTransferWorker;
 // @@@SNIPEND

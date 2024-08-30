@@ -6,7 +6,7 @@ public record PaymentDetails(
     int Amount,
     string Currency,
     string ReferenceId);
-public record ExecutionContext(bool IsBuildingGraph);
+
 
 
 // @@@SNIPEND

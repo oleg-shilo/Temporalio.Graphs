@@ -3,18 +3,21 @@ using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
 
-namespace Temporalio.Graph;
+namespace Temporalio.Graphs;
 
 public class Graph
 {
     public List<string> Elements = new();
     public string AddStep([CallerMemberName] string name = "")
     {
-        Elements.Add(name.TrimEnd("Async"));
-        return $"Generating DAG: {name}"; // will be used as a WF runtime log entry
+        Elements.Add(name);
+        return $"DAG step: {name}"; // will be used as a WF runtime log entry
     }
-    public void AddDecision(string id, bool value, [CallerMemberName] string name = "")
-        => Elements.Add($"{id}{{{name}}}:{(value ? "yes" : "no")}");
+    public string AddDecision(string id, bool value, [CallerMemberName] string name = "")
+    {
+        Elements.Add($"{id}{{{name}}}:{(value ? "yes" : "no")}");
+        return $"DAG decision: {name}"; // will be used as a WF runtime log entry
+    }
 }
 
 public class DagGenerator
@@ -132,7 +135,7 @@ public static class DagValidator
 
         var allActivities = allAassemblyTypes
             .SelectMany(x => x.GetMethods())
-            .Where(x => x.GetAttributes<ActivityAttribute>().Any())
+            .Where(x => x.GetAttributes<ActivityAttribute>().Any() && x.GetAttributes<DecisionAttribute>().IsEmpty())
             .Select(x => new
             {
                 Type = x.DeclaringType,
@@ -232,4 +235,6 @@ static class Extensions
 
     public static T[] GetAttributes<T>(this MemberInfo info, bool inherit = true)
         => info.GetCustomAttributes(typeof(T), inherit).Cast<T>().ToArray();
+
+
 }

@@ -3,9 +3,13 @@
 using Temporalio.Client;
 using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
+using Temporalio.Graphs;
 
 // Create a client to connect to localhost on "default" namespace
-var client = await TemporalClient.ConnectAsync(new("localhost:7233"));
+var client = await TemporalClient.ConnectAsync(
+    new("localhost:7233")
+    {
+    });
 
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
@@ -18,17 +22,23 @@ Console.CancelKeyPress += (_, eventArgs) =>
     eventArgs.Cancel = true;
 };
 
+
 // Create an instance of the activities since we have instance activities.
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
+var graphBuilder = new GraphBuilder();
+
+var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
+{
+    Interceptors = new[] { graphBuilder }
+};
+
+workerOptions
+    .AddAllActivities(activities)           // Register activities
+    .AddWorkflow<MoneyTransferWorkflow>();  // Register workflow
 
 // Create a worker with the activity and workflow registered
-using var worker = new TemporalWorker(
-    client, // client
-    new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
-        .AddAllActivities(activities) // Register activities
-        .AddWorkflow<MoneyTransferWorkflow>() // Register workflow
-);
+using var worker = new TemporalWorker(client, workerOptions);
 
 // Run the worker until it's cancelled
 Console.WriteLine("Running worker...");

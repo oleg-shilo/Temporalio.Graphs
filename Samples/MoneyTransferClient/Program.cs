@@ -15,7 +15,7 @@ var details = new PaymentDetails(
     ReferenceId: "12345"
 );
 
-var context = new Temporalio.MoneyTransferProject.MoneyTransferWorker.ExecutionContext(
+var context = new Temporalio.Graphs.ExecutionContext(
     IsBuildingGraph: args.Contains("-graph")
 );
 

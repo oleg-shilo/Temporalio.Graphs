@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using Temporalio.Graph;
+using Temporalio.Graphs;
 
-namespace Temporalio.Graph.Tests;
+namespace Temporalio.Graphs.Tests;
 public class MermaidGenerationTests
 {
     [Fact]

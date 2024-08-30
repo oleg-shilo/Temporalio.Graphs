@@ -2,14 +2,14 @@
 namespace Temporalio.MoneyTransferProject.MoneyTransferWorker;
 
 using System.Runtime.CompilerServices;
-using Temporalio.Graph;
+using Temporalio.Graphs;
 using Temporalio.Activities;
 using Temporalio.Exceptions;
 
 public class BankingActivities
 {
     [Activity]
-    public static async Task<string> WithdrawAsync(PaymentDetails details)
+    public async Task<string> WithdrawAsync(PaymentDetails details)
     {
         if (Dag.IsBuildingGraph)
             return Dag.ActiveGraph.AddStep();

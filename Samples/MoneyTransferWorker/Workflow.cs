@@ -5,10 +5,11 @@ using Temporalio.Workflows;
 using static Temporalio.Workflows.Workflow;
 using Temporalio.Common;
 using Temporalio.Exceptions;
-using Temporalio.Graph;
+using Temporalio.Graphs;
 using System.Numerics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Temporalio.Api.Protocol.V1;
+using Temporalio.Worker.Interceptors;
 
 [Workflow]
 public class MoneyTransferWorkflow
@@ -51,7 +52,7 @@ public class MoneyTransferWorkflow
     public async Task<string> WorkflowAsync(PaymentDetails details)
     {
         string withdrawResult = await ExecuteActivityAsync(
-            () => BankingActivities.WithdrawAsync(details), options);
+            (BankingActivities b) => b.WithdrawAsync(details), options);
 
         if (Decisions.ActiveProfile.NeedToConvert(details))
         {
@@ -122,4 +123,3 @@ public class MoneyTransferWorkflow
         }
     };
 }
-// @@@SNIPEND
