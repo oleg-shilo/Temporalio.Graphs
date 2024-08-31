@@ -7,7 +7,7 @@ public class MermaidGenerationTests
     [Fact]
     public void SingleDecisionDag()
     {
-        var mermaid = new DagGenerator();
+        var mermaid = new GraphGenerator();
         mermaid.Scenarios
             .AddGraph("Start,Withdraw,d{NeedToConvert}:no,Deposit,End")
             .AddGraph("Start,Withdraw,d{NeedToConvert}:yes,CurrencyConvert,Deposit,End");
@@ -28,7 +28,7 @@ public class MermaidGenerationTests
     [Fact]
     public void TwoDecisionDag()
     {
-        var mermaid = new DagGenerator();
+        var mermaid = new GraphGenerator();
         mermaid.Scenarios
             .AddGraph("Start,StepA,d1{IsCondition1}:no,StepB,End")
             .AddGraph("Start,StepA,d1{IsCondition1}:yes,StepC,d2{IsCondition2}:no,End")

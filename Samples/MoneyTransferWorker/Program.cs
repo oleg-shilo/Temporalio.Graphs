@@ -4,6 +4,7 @@ using Temporalio.Client;
 using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Graphs;
+using System.Diagnostics;
 
 // Create a client to connect to localhost on "default" namespace
 var client = await TemporalClient.ConnectAsync(
@@ -30,7 +31,7 @@ var graphBuilder = new GraphBuilder();
 
 var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
 {
-    Interceptors = new[] { graphBuilder }
+    Interceptors = [graphBuilder]
 };
 
 workerOptions
@@ -39,6 +40,15 @@ workerOptions
 
 // Create a worker with the activity and workflow registered
 using var worker = new TemporalWorker(client, workerOptions);
+
+//#if DEBUG
+//Task.Run(() =>
+//{
+//    //Thread.Sleep(2000);
+//    Process.Start(@".\..\..\MoneyTransferClient\bin\Debug\net8.0\MoneyTransferClient.exe", "-graph");
+//});
+
+//#endif
 
 // Run the worker until it's cancelled
 Console.WriteLine("Running worker...");

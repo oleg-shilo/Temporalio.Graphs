@@ -11,9 +11,6 @@ public class BankingActivities
     [Activity]
     public async Task<string> WithdrawAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank1.example.com");
         Console.WriteLine($"Withdrawing ${details.Amount} from account {details.SourceAccount}.");
         try
@@ -31,9 +28,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> DepositAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank2.example.com");
         Console.WriteLine($"Depositing ${details.Amount} into account {details.TargetAccount}.");
 
@@ -57,9 +51,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> RefundAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank1.example.com");
         Console.WriteLine($"Refunding ${details.Amount} to account {details.SourceAccount}.");
         try
@@ -75,9 +66,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> CurrencyConvertAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank1.example.com");
 
         try
@@ -94,9 +82,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> NotifyAtoAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank1.example.com");
         Console.WriteLine($"CurrencyConvertAsync ${details.Amount} to account {details.SourceAccount}.");
         try
@@ -113,9 +98,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> TakeNonResidentTaxAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         var bankService = new BankingService("bank1.example.com");
 
         try
@@ -132,9 +114,6 @@ public class BankingActivities
     [Activity]
     public static async Task<string> DeliberatelyAbandonedActivityAsync(PaymentDetails details)
     {
-        if (Dag.IsBuildingGraph)
-            return Dag.ActiveGraph.AddStep();
-
         return "";
     }
 }
