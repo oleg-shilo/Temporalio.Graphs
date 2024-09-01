@@ -18,7 +18,7 @@ var details = new PaymentDetails(
 var context = new Temporalio.Graphs.ExecutionContext(
     IsBuildingGraph: args.Contains("-graph"),
     ExitAfterBuildingGraph: args.Contains("-graph-exit"),
-    GrapthOutputFile: args.FirstOrDefault(x => x.StartsWith("-graph-out:"))?.Replace("-graph-out:", "")
+    GraphOutputFile: args.FirstOrDefault(x => x.StartsWith("-graph-out:"))?.Replace("-graph-out:", "")
 );
 
 Console.WriteLine($"Starting transfer from account {details.SourceAccount} to account {details.TargetAccount} for ${details.Amount}");

@@ -16,8 +16,6 @@ using System.Reflection;
 [Workflow]
 public class MoneyTransferWorkflow
 {
-    internal static Action Stop;
-
     [WorkflowRun]
     public async Task<string> RunAsync(PaymentDetails details, ExecutionContext context)
     {

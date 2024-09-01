@@ -15,8 +15,6 @@ var client = await TemporalClient.ConnectAsync(
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
 
-MoneyTransferWorkflow.Stop = tokenSource.Cancel;
-
 Console.CancelKeyPress += (_, eventArgs) =>
 {
     tokenSource.Cancel();
@@ -27,11 +25,10 @@ Console.CancelKeyPress += (_, eventArgs) =>
 // Create an instance of the activities since we have instance activities.
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
-var graphBuilder = new GraphBuilder();
 
 var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
 {
-    Interceptors = [graphBuilder]
+    Interceptors = [new GraphBuilder()]
 };
 
 workerOptions

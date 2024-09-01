@@ -15,7 +15,7 @@ using Temporalio.Api.Update.V1;
 using System.Text;
 
 namespace Temporalio.Graphs;
-public record ExecutionContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GrapthOutputFile);
+public record ExecutionContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
 
 public class GraphBuilder : IWorkerInterceptor
 {
@@ -29,12 +29,12 @@ public class GraphBuilder : IWorkerInterceptor
             {
                 IsBuildingGraph = context.IsBuildingGraph;
                 ExitAfterBuildingGraph = context.IsBuildingGraph;
-                GrapthOutputFile = context.GrapthOutputFile;
+                GraphOutputFile = context.GraphOutputFile;
             }
         }
         public bool IsBuildingGraph;
         public bool ExitAfterBuildingGraph;
-        public string? GrapthOutputFile;
+        public string? GraphOutputFile;
         public GraphPath CurrentGraphPath = new GraphPath();
         public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlan.FirstOrDefault();
         public List<Dictionary<(string Name, int Index), bool>> DecisionsPlan = new();
@@ -167,10 +167,10 @@ public class GraphBuilder : IWorkerInterceptor
                           .AppendLine(validationResult)
                           .AppendLine("=====================");
 
-                    if (Runtime.GrapthOutputFile.IsNotEmpty())
+                    if (Runtime.GraphOutputFile.IsNotEmpty())
                     {
-                        Console.WriteLine($"The WF graph is saved to `{Runtime.GrapthOutputFile}`.");
-                        File.WriteAllText(Runtime.GrapthOutputFile, result.ToString());
+                        Console.WriteLine($"The WF graph is saved to `{Runtime.GraphOutputFile}`.");
+                        File.WriteAllText(Runtime.GraphOutputFile, result.ToString());
                     }
                     else
                     {
