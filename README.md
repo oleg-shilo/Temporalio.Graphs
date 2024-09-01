@@ -53,7 +53,29 @@ var handle = await client.StartWorkflowAsync(
 
 When the graph is generated its definition (see section below) is printed in the console window. Alternatively you can redirect it to the file (UNC or relative to the worker location). Use `ExecutionContext.GraphOutputFile` for that.  
 
-Note WF decision is a special type of a WF action (step) that requires special way of declaring it. See "Decision Action" section further in the text.
+Note WF decision is a special type of a WF action (step) that requires special way of declaring it. This is because Temporal does not recognize Decision as a fist class citizen but instead lets user encoding WS decision nodes as simple programming language conditional statements. This works quite well as Temporal is not concern about the graphs but only logs. However if you are building the graph and wantto capture the decision node then you need to encode it as an Activity which returns either `"True"` or `"False"` strings. You will also need to mark this activity with a new attribute `DecicionAttribute`:
+
+```c#
+[Activity]
+[Decision]
+public static string NeedToConvert(PaymentDetails details)
+{
+    return (details.Currency != "AUD").ToString();
+}
+```
+
+And this is how you can use this DecicionActvity:
+
+```c#
+bool needToConvert = await this.Decision(() => BankingActivities.NeedToConvert(details));
+
+if (needToConvert)
+{
+    await ExecuteActivityAsync(
+        () => BankingActivities.CurrencyConvertAsync(details), options);
+}
+```
+Note the use of the extension method `Decision`, which converts the Activity return string into `bool` for convenient use in C# conditions.
 
 ### Graphs Output
 
@@ -110,9 +132,9 @@ When the graph is generated the result is either printed in the console output o
    Temporalio.MoneyTransferProject.MoneyTransferWorker.BankingActivities.DeliberatelyAbandonedActivityAsync
    ```
 
-## How it works
+## How it works under the hood
 
-This section is still under construction
+The idea behind WF graph generation is quite simple. All WF actions are the nodes (steps) in the WF graph. Thus if you execute the WF from the start to the end and record the names of teh actions being executes, you have a complete accurate graph path. The only thing that you need to take care of is to avoid executing the WF action business logic during the graph building execution.
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}} }%%
@@ -164,6 +186,7 @@ sequenceDiagram
    deactivate wf
    deactivate wf-int
 ```
+
 
 ## Prerequisites
 
