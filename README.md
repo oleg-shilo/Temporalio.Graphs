@@ -7,30 +7,26 @@ When it comes to the WorkFlow (WF) engines. Many of them flw
 ### Graphs
 
 ```
-Start > Withdraw > decision1{NeedToConvert}:no > decision0{IsTFN_Known}:yes > NotifyAto > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:no > decision0{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:yes > CurrencyConvert > decision0{IsTFN_Known}:yes > NotifyAto > Deposit > End
-Start > Withdraw > decision1{NeedToConvert}:yes > CurrencyConvert > decision0{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
+Start > Withdraw > 0{NeedToConvert}:yes > CurrencyConvert > 1{IsTFN_Known}:yes > NotifyAto > Deposit > End
+Start > Withdraw > 0{NeedToConvert}:yes > CurrencyConvert > 1{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
+Start > Withdraw > 0{NeedToConvert}:no > 1{IsTFN_Known}:yes > NotifyAto > Deposit > End
+Start > Withdraw > 0{NeedToConvert}:no > 1{IsTFN_Known}:no > TakeNonResidentTax > Deposit > End
 ```
 
 ### The whole DAG
 
 ```mermaid
 flowchart LR
-s((Start)) --> Withdraw --> decision2{NeedToConvert} -- yes --> CurrencyConvert --> decision1{IsTFN_Known} -- yes --> NotifyAto --> Deposit --> e((End))
-decision1{IsTFN_Known} -- no --> TakeNonResidentTax --> Deposit
-decision2{NeedToConvert} -- no --> decision1{IsTFN_Known}
+s((Start)) --> Withdraw --> 0{NeedToConvert} -- yes --> CurrencyConvert --> 1{IsTFN_Known} -- yes --> NotifyAto --> Deposit --> e((End))
+1{IsTFN_Known} -- no --> TakeNonResidentTax --> Deposit
+0{NeedToConvert} -- no --> 1{IsTFN_Known}
 ```
 
 ### Graph Validation
 ```
-WARNING: the following activities are not present in the full DAG: [Temporalio.MoneyTransferProject.MoneyTransferWorker.BankingActivities.DeliberatelyAbandonedActivityAsync]
-This is either because the activity was not run during the WF execution or because the activity does not have the following statement as the first line in the implementation block:
-    if (Dag.IsBuildingGraph)
-        return Dag.ActiveGraph.AddStep();
-WARNING: the following decisions are not present in the full DAG: [Temporalio.MoneyTransferProject.MoneyTransferWorker.Decisions.AbandonedTestDecision]
-This is either because the decision or its all permutations were not evaluated during the WF execution or because it was not implemented correctly.
-See Temporalio.Graphs samples.
+WARNING: the following activities are not present in the full WF graph:
+Temporalio.MoneyTransferProject.MoneyTransferWorker.BankingActivities.RefundAsync,
+Temporalio.MoneyTransferProject.MoneyTransferWorker.BankingActivities.DeliberatelyAbandonedActivityAsync
 ```
 
 ## How it works
