@@ -86,13 +86,14 @@ When the graph is generated the result is either printed in the console output o
 
 2. The second section is... well, secondary. It contains an alternative syntax of the WF definition -  Mermaid syntax. It is a great way to verify the accuracy of the generated graph. Just paste the section content in any Mermaid rendering host. IE GitHub markdown document renders Mermaid diagrams natively. Below is the Mermaid specification from the screenshot above that is rendered by Github: 
 
-   ```
+   ````markdown
    ```mermaid
    flowchart LR
    s((Start)) --> Withdraw --> 0{NeedToConvert} -- yes --> CurrencyConvert --> 1{IsTFN_Known} -- yes --> NotifyAto --> Deposit --> e((End))
    1{IsTFN_Known} -- no --> TakeNonResidentTax --> Deposit
    0{NeedToConvert} -- no --> 1{IsTFN_Known}
    ```
+   ````
 
    ```mermaid
    flowchart LR
