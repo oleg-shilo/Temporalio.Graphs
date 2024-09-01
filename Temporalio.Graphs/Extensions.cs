@@ -2,9 +2,12 @@ using System.Runtime.CompilerServices;
 using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
+using System.Linq.Expressions;
+using Temporalio.Workflows;
+using System.Diagnostics;
 
 namespace Temporalio.Graphs;
-static class GenericExtensions
+public static class GenericExtensions
 {
     public static string TrimEnd(this string text, params string[] trimText)
     {
@@ -20,10 +23,10 @@ static class GenericExtensions
         => string.Join(separator, items);
 
     public static bool IsEmpty<T>(this IEnumerable<T> items)
-        => items.Count() == 0;
+        => items == null ? true : items.Count() == 0;
 
     public static bool IsNotEmpty<T>(this IEnumerable<T> items)
-        => items.Any();
+        => items?.Any() == true;
 
     public static void AddPath(this List<List<string>> scenarios, GraphPath path)
         => scenarios.Add(path.Elements.ToList());
@@ -52,8 +55,25 @@ static class GenericExtensions
     }
 }
 
-static class WorkflowExtensions
+public static class GraphsExtensions
 {
+    public static async Task<bool> Decision(this object workflow, Expression<Func<string>> activityCall, ActivityOptions options = null)
+    {
+        var positiveValue = true.ToString();
+        try
+        {
+            var method = (MethodInfo)activityCall.Body.GetPropValue("Method");
+
+            var attribute = method.GetCustomAttribute<DecisionAttribute>();
+            if (attribute != null)
+                positiveValue = attribute.PositiveValue;
+        }
+        catch { }
+
+        string result = await Workflow.ExecuteActivityAsync(activityCall, options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+        return result == positiveValue;
+    }
+
     public static string ToSimpleMermaidName(this string name)
     {
         // activity:  "longName"
@@ -73,37 +93,39 @@ static class WorkflowExtensions
         var method = (MethodInfo)target1.GetFieldValue("method");
         return method;
     }
-    public static (Stack<bool>, string) GetDecisionExecutionPlan(this Dictionary<string, (Stack<bool>, string)> permutations, string decision)
+
+    public static void GeneratePermutationsFor(this List<Dictionary<(string name, int index), bool>> result, params (string, int)[] names)
+        => GeneratePermutations(result, names, 0, new bool[names.Count()]);
+
+    static void GeneratePermutations(List<Dictionary<(string name, int index), bool>> result, (string, int)[] names, int index, bool[] currentPermutation)
     {
-        // TODO: Implement this method by using reflection against an activity definition
+        bool[] values = { true, false };
 
-        var key = decision;
-
-        if (permutations.ContainsKey(key))
-            return permutations[key];
-        else if (permutations.ContainsKey(key += "Async"))
-            return permutations[key];
-        else
-            return default;
-    }
-
-    public static Dictionary<string, (Stack<bool> Plan, string Id)> SetupPermutations(this (int Index, string Name)[] decisions)
-    {
-        var permutations = new Dictionary<string, (Stack<bool>, string)>();
-        foreach (var decision in decisions)
+        if (index == currentPermutation.Length)
         {
-            permutations[decision.Name] = (new Stack<bool>(new[] { true, false }), $"decision{decision.Index}");
+            //Debug.WriteLine(currentPermutation.Select((x, i) => $"{names[i]}: {x}").JoinBy(", "));
+            result.Add(
+                currentPermutation
+                    .Select((x, i) => new { name = (names[i], i), value = x })
+                    .ToDictionary(x => x.name.Item1, x => x.value));
+            return;
         }
-        return permutations;
+
+        // Tail-recursive calls
+        foreach (bool value in values)
+        {
+            currentPermutation[index] = value;
+            GeneratePermutations(result, names, index + 1, currentPermutation);
+        }
     }
 
-    public static (int Index, string Name)[] GetDecisions(this Assembly assembly)
+    public static (string Name, int Index)[] GetDecisions(this Assembly assembly)
     {
         return assembly
             .GetTypes()
             .SelectMany(t => t.GetMethods())
             .Where(p => p.GetCustomAttributes<DecisionAttribute>().Any())
-            .Select((m, i) => (i, m.Name))
+            .Select((m, i) => (m.FullName(), i))
             .ToArray();
     }
 }

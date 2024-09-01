@@ -10,6 +10,8 @@ using System.Numerics;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Temporalio.Api.Protocol.V1;
 using Temporalio.Worker.Interceptors;
+using System.Linq.Expressions;
+using System.Reflection;
 
 [Workflow]
 public class MoneyTransferWorkflow
@@ -22,18 +24,21 @@ public class MoneyTransferWorkflow
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);
 
-        //if (Decisions.ActiveProfile.NeedToConvert(details))
-        //{
-        //    await ExecuteActivityAsync(
-        //        () => BankingActivities.CurrencyConvertAsync(details), options);
-        //}
+        bool needToConvert = await this.Decision(() => BankingActivities.NeedToConvert(details));
 
-        //if (Decisions.ActiveProfile.IsTFN_Known(details))
-        //{
-        //    await ExecuteActivityAsync(
-        //        () => BankingActivities.NotifyAtoAsync(details), options);
-        //}
-        //else
+        if (needToConvert)
+        {
+            await ExecuteActivityAsync(
+                () => BankingActivities.CurrencyConvertAsync(details), options);
+        }
+
+        bool isTFN_Known = await this.Decision(() => BankingActivities.IsTFN_Known(details));
+        if (isTFN_Known)
+        {
+            await ExecuteActivityAsync(
+                () => BankingActivities.NotifyAtoAsync(details), options);
+        }
+        else
         {
             await ExecuteActivityAsync(
                 () => BankingActivities.TakeNonResidentTaxAsync(details), options);
@@ -78,7 +83,7 @@ public class MoneyTransferWorkflow
         return depositActionResult;
     }
 
-    ActivityOptions options = new ActivityOptions
+    static ActivityOptions options = new ActivityOptions
     {
         StartToCloseTimeout = TimeSpan.FromMinutes(5),
         RetryPolicy = new RetryPolicy

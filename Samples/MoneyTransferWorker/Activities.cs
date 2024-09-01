@@ -96,6 +96,20 @@ public class BankingActivities
     }
 
     [Activity]
+    [Decision(NegativeValue = "Not AUD")]
+    public static string NeedToConvert(PaymentDetails details)
+    {
+        return (details.Currency != "AUD").ToString();
+    }
+
+    [Activity]
+    [Decision()]
+    public static string IsTFN_Known(PaymentDetails details)
+    {
+        return true.ToString();
+    }
+
+    [Activity]
     public static async Task<string> TakeNonResidentTaxAsync(PaymentDetails details)
     {
         var bankService = new BankingService("bank1.example.com");

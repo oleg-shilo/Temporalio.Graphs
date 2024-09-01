@@ -1,7 +1,10 @@
 // Ignore Spelling: Workflow
 
+//using Google.Protobuf.WellKnownTypes;
 using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Temporalio.Activities;
@@ -9,6 +12,25 @@ using Temporalio.Activities;
 namespace Temporalio.Graphs.Tests;
 public class GenericTests
 {
+    static Expression<Func<Task<string>>> GetExpression(Expression<Func<Task<string>>> activityCall)
+    {
+        return activityCall;
+    }
+
+    [Fact]
+    public void Workflow_Decision()
+    {
+        System.Type ExpressionUtil = typeof(Temporalio.Common.RetryPolicy).GetTypeInfo().Assembly.GetType("Temporalio.Common.ExpressionUtil");
+
+        var activityCall = GetExpression(() => TestWorkflowActivities.StepAAsync());
+        Expression<Func<Task<string>>> activityCall2 = () => TestWorkflowActivities.StepAAsync();
+
+        var methods = ExpressionUtil.GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(x => x.GetParameters().Count() == 1);
+        var rr = methods.Invoke(null, new object[] { activityCall });
+
+        var result = ExpressionUtil.InvokeMember("ExtractCall", BindingFlags.InvokeMethod, null, null, new object[] { activityCall });
+    }
+
     [Fact]
     public void Graps_ActivityLongNames()
     {
@@ -39,6 +61,30 @@ public class GenericTests
 
         //Assert.Equal("decision0", propId1);
         //Assert.Equal("decision1", propId2);
+    }
+
+    [Fact]
+    public void Decisions_Permutations()
+    {
+        var names = new[]
+        {
+            ("a", 1),
+            ("b", 2),
+            ("c", 3),
+            ("d", 4),
+        };
+
+        var result = new List<Dictionary<(string name, int index), bool>>();
+        result.GeneratePermutationsFor(names);
+
+        Assert.Equal(16, result.Count);
+
+        var uniquePermutations = result
+            .Select(x => x.Select(y => y.Value.ToString()).JoinBy(",")) // convert to a string of values
+            .Distinct()
+            .ToArray();
+
+        Assert.Equal(result.Count, uniquePermutations.Count());
     }
 
     [Fact]
@@ -106,15 +152,11 @@ public class GenericTests
         var stepA = $"{type}.StepAAsync";
         var stepB = $"{type}.StepBAsync";
         var stepC = $"{type}.StepCAsync";
-        var stepD = $"{type}.StepDAsync";
-
-        var needToConvert = $"{type}.NeedToConvertAsync";
-        var needToRefund = $"{type}.NeedToRefundAsync";
 
         var mermaid = new GraphGenerator();
         mermaid.Scenarios
             .AddGraph($"Start,{stepA},d1{{IsCondition1}}:no,{stepB},End")
-            .AddGraph($"Start,{stepA},d1{{IsCondition1}}:yes,needStepC,End");
+            .AddGraph($"Start,{stepA},d1{{IsCondition1}}:yes,{stepC},End");
 
         string errorMessage = mermaid.ValidateGraphAgainst(typeof(TestWorkflowActivities).Assembly);
 
@@ -135,37 +177,28 @@ public class GenericTests
     [Fact]
     public void Decisions_SetupPermutations()
     {
-        dynamic t = 1;
-        t = "";
+        Assert.Fail("not implemented");
 
-        var decisions = Assembly.GetExecutingAssembly().GetDecisions();
+        //var decisions = Assembly.GetExecutingAssembly().GetDecisions();
+        //var permutations = new List<Dictionary<(string Name, int Index), bool>>();
+        //permutations.GeneratePermutationsFor(decisions);
 
-        var permutations = decisions.SetupPermutations();
+        //Assert.Equal(2, decisions.Count());
+        //Assert.Equal(2, permutations.Count());
 
+        //Assert.Equal("NeedToConvertAsync", decisions[0].Name);
+        //Assert.Equal("NeedToRefundAsync", decisions[1].Name);
 
-        Assert.Equal(2, decisions.Count());
-        Assert.Equal(2, permutations.Count());
+        //Assert.False(permutations[decisions[0].Name].Plan.Pop());
+        //Assert.True(permutations[decisions[0].Name].Plan.Pop());
 
-        Assert.Equal("NeedToConvertAsync", decisions[0].Name);
-        Assert.Equal("NeedToRefundAsync", decisions[1].Name);
+        //Assert.False(permutations[decisions[1].Name].Plan.Pop());
+        //Assert.True(permutations[decisions[1].Name].Plan.Pop());
 
-        Assert.False(permutations[decisions[0].Name].Plan.Pop());
-        Assert.True(permutations[decisions[0].Name].Plan.Pop());
-
-        Assert.False(permutations[decisions[1].Name].Plan.Pop());
-        Assert.True(permutations[decisions[1].Name].Plan.Pop());
-
-        Assert.Empty(permutations[decisions[0].Name].Plan);
-        Assert.Empty(permutations[decisions[1].Name].Plan);
+        //Assert.Empty(permutations[decisions[0].Name].Plan);
+        //Assert.Empty(permutations[decisions[1].Name].Plan);
     }
 }
-//class TestWorkflowDecisions : DecisionsBase
-//{
-//    [Decision]
-//    public string First => base.Id();
-//    [Decision]
-//    public string Second => base.Id();
-//}
 
 public class TestActivityDecisions
 {
