@@ -59,6 +59,7 @@ Note WF decision is a special type of a WF action (step) that requires special w
 
 When the graph is generated the result is either printed in the console output or to the file. The result is a text that consist of three sections as on the screenshot below:
 
+![image](https://github.com/user-attachments/assets/2ec48cfb-18b0-4a5c-9460-1ec1368dcbce)
 
 1. The first section is the actual WF graph. This is the primary graph generation result. In the section text each line represents a graph unique path. If there is no decision node in the WF graph then there is only one path possible. The path definition is captured in this simple format:
 
@@ -91,10 +92,7 @@ When the graph is generated the result is either printed in the console output o
    s((Start)) --> Withdraw --> 0{NeedToConvert} -- yes --> CurrencyConvert --> 1{IsTFN_Known} -- yes --> NotifyAto --> Deposit --> e((End))
    1{IsTFN_Known} -- no --> TakeNonResidentTax --> Deposit
    0{NeedToConvert} -- no --> 1{IsTFN_Known}
-   
-   ``` 
    ```
-
 
    ```mermaid
    flowchart LR
@@ -112,6 +110,8 @@ When the graph is generated the result is either printed in the console output o
    ```
 
 ## How it works
+
+This section is still under construction
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}} }%%
