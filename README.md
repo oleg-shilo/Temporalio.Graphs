@@ -6,7 +6,7 @@ The obvious limitation of DAG (inability to support loops) comes with the great 
 
 Temporal belongs to the DAG-less family of WF engines. Thus, of the box, it offers somewhat limited visualization capabilities that are sacrificed for the more flexible architecture.  
 
-Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WH regardless how far the execution progressed.
+Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WH regardless how far the execution progressed. The problem has been detected and even [discussed](https://community.temporal.io/t/see-workflow-as-a-dag/2010) in the Temporal community but without any significant progress in addressing it. 
 
 This project is an attempt to feel this gap.
 
