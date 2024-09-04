@@ -13,7 +13,7 @@ namespace Temporalio.Graphs;
 
 public static class TemporalExtensions
 {
-    public async static Task ExecuteInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall)
+    public async static Task ExecuteWorkerInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall)
     {
         await using var env = await WorkflowEnvironment.StartLocalAsync();
         using var worker = new TemporalWorker(env.Client, workerOptions);

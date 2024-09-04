@@ -25,6 +25,8 @@ public class GraphBuilder : IWorkerInterceptor
 
     static internal Dictionary<string, RuntimeContext> Sessions = new();
 
+    public ExecutionContext Context { get; set; }
+
     public GraphBuilder(Action stopWorker)
     {
         StopWorkflowWorker = stopWorker;
@@ -32,25 +34,30 @@ public class GraphBuilder : IWorkerInterceptor
 
     public class RuntimeContext
     {
-        public void InitFrom(ExecuteWorkflowInput input)
+        public bool InitFrom(ExecuteWorkflowInput input)
+            => InitFrom(input.Args.OfType<ExecutionContext>().FirstOrDefault());
+
+        public bool InitFrom(Temporalio.Graphs.ExecutionContext context)
         {
-            var context = input.Args.OfType<ExecutionContext>().FirstOrDefault();
             if (context != null)
             {
                 IsBuildingGraph = context.IsBuildingGraph;
                 ExitAfterBuildingGraph = context.IsBuildingGraph;
                 GraphOutputFile = context.GraphOutputFile;
+                return true;
             }
+            return false;
         }
+        public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlan.FirstOrDefault();
+        public List<Dictionary<(string Name, int Index), bool>> DecisionsPlan = new();
         public bool IsBuildingGraph;
         public bool ExitAfterBuildingGraph;
         public string? GraphOutputFile;
         public GraphPath CurrentGraphPath = new GraphPath();
-        public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlan.FirstOrDefault();
-        public List<Dictionary<(string Name, int Index), bool>> DecisionsPlan = new();
+        internal bool initialized = false;
     }
 
-    public WorkflowInboundInterceptor InterceptWorkflow(WorkflowInboundInterceptor nextInterceptor) => new WorkflowInbound(nextInterceptor);
+    public WorkflowInboundInterceptor InterceptWorkflow(WorkflowInboundInterceptor nextInterceptor) => new WorkflowInbound(nextInterceptor, this.Context);
     public ActivityInboundInterceptor InterceptActivity(ActivityInboundInterceptor nextInterceptor) => new ActivityInbound(nextInterceptor);
 
     class ActivityInbound : ActivityInboundInterceptor
@@ -123,13 +130,21 @@ public class GraphBuilder : IWorkerInterceptor
             }
         }
 
-        public WorkflowInbound(WorkflowInboundInterceptor next) : base(next) { }
+        ExecutionContext context;
+        public WorkflowInbound(WorkflowInboundInterceptor next, ExecutionContext context) : base(next)
+        {
+            this.context = context;
+        }
 
         public override async Task<object?> ExecuteWorkflowAsync(ExecuteWorkflowInput input)
         {
             try
             {
-                Runtime.InitFrom(input);
+                // if we are running on a remote temporal server user may decide to push the custom context
+                // otherwise we will use the context from the current execution (obtained during worker initialization)
+                if (!Runtime.InitFrom(input))
+                    if (!Runtime.InitFrom(this.context))
+                        throw new ApplicationException("Execution context object was not supplied.");
 
                 if (Runtime.IsBuildingGraph)
                 {
@@ -179,6 +194,7 @@ public class GraphBuilder : IWorkerInterceptor
 
                     if (Runtime.GraphOutputFile.IsNotEmpty())
                     {
+                        Console.WriteLine();
                         Console.WriteLine($"The WF graph is saved to `{Runtime.GraphOutputFile}`.");
                         File.WriteAllText(Runtime.GraphOutputFile, result.ToString());
                     }

@@ -198,11 +198,33 @@ Before running this application, ensure you have the following installed:
 ## Steps to get started
 
 1. _**Build the solution**_
-2. _**Start the Temporal Server**_
-   `temporal server start-dev`
-3. _**Start the WF worker**_
-   `MoneyTransferWorker.exe`
-4. _**Start the WF in build graph mode**_
-   `MoneyTransferClient.exe -graph`
+2. _**Start the WF worker**_
+   `MoneyTransferWorker.exe  -graph`
+   This will generate `MoneyTransferWorker.graph` file with the WF graph
 
-The WF worker will print the unique execution graphs for the WF executed in the mocked mod. It will also print the Mermaid diagram representing the whole DAG as well as the WF graphs validation result.
+The WF worker will generate the unique execution graphs for the WF executed in the mocked mode. It will also generate the Mermaid diagram representing the whole DAG as well as the WF graphs validation result. The worker will be executed without connecting to the live Temporal Server. It will connect toi the inmemory server instead.
+
+Thus the worker assembly has no runtime dependency so it can be used to generate the graph on CI without any difficulties.
+
+The routine that triggers the mocked execution is part of the worker setup (`program.cs`):
+
+```c#
+bool isBuildingGraph = args.Contains("-graph");
+
+if (isBuildingGraph)
+{
+    interceptor.Context = new Temporalio.Graphs.ExecutionContext(
+        IsBuildingGraph: true,
+        ExitAfterBuildingGraph: true,
+        GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+
+    await workerOptions.ExecuteWorkerInMemory(
+        (MoneyTransferWorkflow wf) => wf.RunAsync(null));
+}
+else
+{
+   // normal execution
+}
+```
+
+If it is required to generate the graph of the running instance then you can achieve this by passing the `ExecutionContext` object to the `RunAsync` as a parameter from the client application. The instance of GraphBuilder interceptor will detect and handle the parameter for the client. You will need to add this parameter to the `RunAsync` signature.  

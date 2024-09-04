@@ -17,7 +17,7 @@ using System.Reflection;
 public class MoneyTransferWorkflow
 {
     [WorkflowRun]
-    public async Task<string> RunAsync(PaymentDetails details, ExecutionContext context)
+    public async Task<string> RunAsync(PaymentDetails details)
     {
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);

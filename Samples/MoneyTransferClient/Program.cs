@@ -27,9 +27,13 @@ var workflowId = $"pay-invoice-{Guid.NewGuid()}";
 
 try
 {
+    // If you want to pass the interception context you can modify `RunAsync` signature to accept
+    // an additional parameter of type `ExecutionContext` and pass it here. And the interceptor will
+    // detect i and handle it.
+
     // Start the workflow
     var handle = await client.StartWorkflowAsync(
-        (MoneyTransferWorkflow wf) => wf.RunAsync(details, context),
+        (MoneyTransferWorkflow wf) => wf.RunAsync(details),
         new(id: workflowId, taskQueue: "MONEY_TRANSFER_TASK_QUEUE"));
 
     Console.WriteLine($"Started WorkFlowAsync {workflowId}");

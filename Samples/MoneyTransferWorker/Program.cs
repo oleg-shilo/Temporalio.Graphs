@@ -5,10 +5,6 @@ using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Graphs;
 using System.Diagnostics;
-using Temporalio.Api.Version.V1;
-using Temporalio.Testing;
-using Microsoft.Extensions.Options;
-using System.Linq.Expressions;
 
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
@@ -23,9 +19,12 @@ Console.CancelKeyPress += (_, eventArgs) =>
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
 
+
+var interceptor = new GraphBuilder(tokenSource.Cancel);
+
 var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
 {
-    Interceptors = [new GraphBuilder(tokenSource.Cancel)]
+    Interceptors = [interceptor]
 };
 
 workerOptions
@@ -38,15 +37,13 @@ bool isBuildingGraph = args.Contains("-graph");
 
 if (isBuildingGraph)
 {
-    PaymentDetails details = new(default, default, default, default, default); // we are mocking the activities anyway
-
-    var context = new Temporalio.Graphs.ExecutionContext(
+    interceptor.Context = new Temporalio.Graphs.ExecutionContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
         GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
 
-    await workerOptions.ExecuteInMemory(
-        (MoneyTransferWorkflow wf) => wf.RunAsync(details, context));
+    await workerOptions.ExecuteWorkerInMemory(
+        (MoneyTransferWorkflow wf) => wf.RunAsync(null));
 }
 else
 {
