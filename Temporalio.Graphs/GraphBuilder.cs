@@ -13,13 +13,23 @@ using System.Diagnostics;
 using Temporalio.Activities;
 using Temporalio.Api.Update.V1;
 using System.Text;
+using Temporalio.Testing;
+using Temporalio.Worker;
 
 namespace Temporalio.Graphs;
 public record ExecutionContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
 
 public class GraphBuilder : IWorkerInterceptor
 {
+    static public Action StopWorkflowWorker { get; set; } = () => { };
+
     static internal Dictionary<string, RuntimeContext> Sessions = new();
+
+    public GraphBuilder(Action stopWorker)
+    {
+        StopWorkflowWorker = stopWorker;
+    }
+
     public class RuntimeContext
     {
         public void InitFrom(ExecuteWorkflowInput input)
@@ -179,7 +189,7 @@ public class GraphBuilder : IWorkerInterceptor
 
                     if (Runtime.ExitAfterBuildingGraph)
                     {
-                        // TODO
+                        StopWorkflowWorker();
                     }
 
                     return "The WF graph is generated";
@@ -196,3 +206,5 @@ public class GraphBuilder : IWorkerInterceptor
         }
     }
 }
+
+
