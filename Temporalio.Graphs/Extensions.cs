@@ -5,8 +5,28 @@ using System.Reflection;
 using System.Linq.Expressions;
 using Temporalio.Workflows;
 using System.Diagnostics;
+using Temporalio.Testing;
+using Temporalio.Worker;
+using Temporalio.Client;
 
 namespace Temporalio.Graphs;
+
+public static class TemporalExtensions
+{
+    public async static Task ExecuteInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall)
+    {
+        await using var env = await WorkflowEnvironment.StartLocalAsync();
+        using var worker = new TemporalWorker(env.Client, workerOptions);
+        WorkflowOptions options = new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!);
+
+        await worker.ExecuteAsync(async () =>
+                                  {
+                                      var result = await ((ITemporalClient)worker.Client).ExecuteWorkflowAsync(workflowRunCall, options);
+                                  });
+
+    }
+}
+
 public static class GenericExtensions
 {
     public static string TrimEnd(this string text, params string[] trimText)
@@ -33,6 +53,9 @@ public static class GenericExtensions
 
     public static string FullName(this MemberInfo info)
         => $"{info.DeclaringType.FullName}.{info.Name}";
+
+    public static string ChangeExtension(this string file, string newExtension)
+        => Path.ChangeExtension(file, newExtension);
 
     public static T[] GetAttributes<T>(this MemberInfo info, bool inherit = true)
         => info.GetCustomAttributes(typeof(T), inherit).Cast<T>().ToArray();

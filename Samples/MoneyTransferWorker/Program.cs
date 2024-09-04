@@ -5,12 +5,10 @@ using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Graphs;
 using System.Diagnostics;
-
-// Create a client to connect to localhost on "default" namespace
-var client = await TemporalClient.ConnectAsync(
-    new("localhost:7233")
-    {
-    });
+using Temporalio.Api.Version.V1;
+using Temporalio.Testing;
+using Microsoft.Extensions.Options;
+using System.Linq.Expressions;
 
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
@@ -21,41 +19,55 @@ Console.CancelKeyPress += (_, eventArgs) =>
     eventArgs.Cancel = true;
 };
 
-
 // Create an instance of the activities since we have instance activities.
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
 
 var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
 {
-    Interceptors = [new GraphBuilder()]
+    Interceptors = [new GraphBuilder(tokenSource.Cancel)]
 };
 
 workerOptions
     .AddAllActivities(activities)           // Register activities
     .AddWorkflow<MoneyTransferWorkflow>();  // Register workflow
 
-// Create a worker with the activity and workflow registered
-using var worker = new TemporalWorker(client, workerOptions);
+// ========================================================================================
 
-//#if DEBUG
-//Task.Run(() =>
-//{
-//    //Thread.Sleep(2000);
-//    Process.Start(@".\..\..\MoneyTransferClient\bin\Debug\net8.0\MoneyTransferClient.exe", "-graph");
-//});
+bool isBuildingGraph = args.Contains("-graph");
 
-//#endif
-
-// Run the worker until it's cancelled
-Console.WriteLine("Running worker...");
-try
+if (isBuildingGraph)
 {
-    await worker.ExecuteAsync(tokenSource.Token);
+    PaymentDetails details = new(default, default, default, default, default); // we are mocking the activities anyway
+
+    var context = new Temporalio.Graphs.ExecutionContext(
+        IsBuildingGraph: true,
+        ExitAfterBuildingGraph: true,
+        GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+
+    await workerOptions.ExecuteInMemory(
+        (MoneyTransferWorkflow wf) => wf.RunAsync(details, context));
 }
-catch (OperationCanceledException) // check and unpack for aggregated exception here as well and
+else
 {
-    Console.WriteLine("Worker canceled");
+    // Create a client to connect to localhost on "default" namespace
+    var client = await TemporalClient.ConnectAsync(
+        new("localhost:7233")
+        {
+        });
+
+    // Create a worker with the activity and workflow registered
+    using var worker = new TemporalWorker(client, workerOptions);
+
+    // Run the worker until it's cancelled
+    Console.WriteLine("Running worker...");
+    try
+    {
+        await worker.ExecuteAsync(tokenSource.Token);
+    }
+    catch (OperationCanceledException) // check and unpack for aggregated exception here as well and
+    {
+        Console.WriteLine("Worker canceled");
+    }
 }
 // @@@SNIPEND
-
