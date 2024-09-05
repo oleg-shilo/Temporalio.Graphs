@@ -12,7 +12,7 @@ This project is an attempt to feel this gap.
 
 ## Solution
 
-`Temporalio.Graphs` is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when all WF activities are mocked and only log the graph step during the execution.
+`Temporalio.Graphs` is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when all WF activities are mocked and only log the graph steps during the execution.
 
 In order to achieve that you will need to add `Temporalio.Graphs` NuGet package to your worker project and then do the following steps:
 
@@ -25,30 +25,28 @@ In order to achieve that you will need to add `Temporalio.Graphs` NuGet package 
    . . .
    using var worker = new TemporalWorker(client, workerOptions);
   ```
-
-- Add an extra parameter `ExecutionContext` to your WF definition. The WF client application will supply this parameter to indicate that the graph needs to be generated. 
-  ```C#
-  [Workflow]
-  public class MoneyTransferWorkflow
-  {
-      [WorkflowRun]
-      public async Task<string> RunAsync(PaymentDetails details, ExecutionContext context)
-      {
-         . . .
-  ```
-
+  
 That's it. Now you can run your WF either as normal or in a graph-generation mode when all WF actions are replaced at runtime with mocks and the graph definition is generated. 
 
-This is how you can do it from the client application.
+This is how you can do it from the worker application.
 
 ```c#
-var context = new Temporalio.Graphs.ExecutionContext(
-    IsBuildingGraph: true // e.g. read it from CLI args
-);
+bool isBuildingGraph = args.Contains("-graph");
 
-var handle = await client.StartWorkflowAsync(
-    (MoneyTransferWorkflow wf) => wf.RunAsync(details, context),
-    new(id: workflowId, taskQueue: "MONEY_TRANSFER_TASK_QUEUE"));
+if (isBuildingGraph)
+{
+    interceptor.Context = new Temporalio.Graphs.ExecutionContext(
+        IsBuildingGraph: true,
+        ExitAfterBuildingGraph: true,
+        GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+
+    await workerOptions.ExecuteWorkerInMemory(
+        (MoneyTransferWorkflow wf) => wf.RunAsync(null));
+}
+else
+{
+    // normal execution
+    . . .
 ```
 
 When the graph is generated its definition (see section below) is printed in the console window. Alternatively you can redirect it to the file (UNC or relative to the worker location). Use `ExecutionContext.GraphOutputFile` for that.  
