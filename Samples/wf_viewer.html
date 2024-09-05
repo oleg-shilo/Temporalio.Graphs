@@ -10,6 +10,11 @@
         white-space: pre;
     }
 
+    .selectedStep {
+        stroke: rgb(245, 175, 141);
+        stroke-width: 2px;
+    }
+
     table,
     th,
     td {
@@ -30,8 +35,9 @@
 <body>
 
     <div class="">
-        <h3>Workflow Visualisation</h3>
+        <h3>Workflow Visualization</h3>
         <p>Sample graph (Mermaid).</p>
+        <button onclick="nextStep()">next</button>
     </div>
 
     <div class="mermaid"></div>
@@ -54,28 +60,25 @@
     <br>
     <button onclick="mermaidDraw()">Render</button><br>
     <br>
-    <textarea rows="4" cols="100" height="150px" rows="10">
+    <textarea rows="4" cols="100" min-height="250px" rows="10">
 ```mermaid
 %%{ init: { 'securityLevel': 'loose' } }%%
 flowchart LR
-s((Start)) --> Withdraw[Withdraw]:::activeStep --> 2:NeedToConvert(Need to convert?) -- yes --> CurrencyConvert[Convert Currency] --> 1:(Is TFN Known?) -- yes --> NotifyAto --> Deposit --> e((End))
+s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes --> CurrencyConvert[Convert Currency] --> 1:(Is TFN Known?) -- yes --> NotifyAto --> Deposit --> e((End))
 1:(Is TFN Known?) -- no --> TakeNonResidentTax --> Deposit
 2:NeedToConvert -- no --> 1:(Is TFN Known?)
-classDef activeStep stroke:#f00,stroke-width:4px;
 ```</textarea>
-
-    <!-- <textarea rows="4" cols="100" height="150px" rows="10">flowchart LR -->
-    <!-- A["`var1=${VAR1}`"] --><!-- |"{VAR2}"| B("{VAR3}") -->
-    <!-- </textarea>  -->
-
 
     <script>
         mermaid.initialize({
             startOnLoad: true
         });
+
         eleM = document.querySelector('.mermaid');
         eleE = document.querySelector('#err');
+
         setTimeout(mermaidDraw, 200);
+
         async function mermaidDraw() {
             try {
                 graphDefinition = await mermaidEval('LocalFile.md');
@@ -96,9 +99,14 @@ classDef activeStep stroke:#f00,stroke-width:4px;
                 eleE.insertAdjacentHTML('beforeend', `🚫${err.message}\n`);
             }
         };
+
         async function mermaidEval(url) {
+
+            // get the response from the server
+
             //const response = await fetch(url);
             //text = await response.text();
+
             text = document.querySelector('textarea').value;
             if (!text.match(/^[a-zA-Z]/)) {
                 // markdown ```mermaid, remove first and last line
@@ -110,12 +118,47 @@ classDef activeStep stroke:#f00,stroke-width:4px;
             text = text.replace(/"\{.*?\}"/g, function (match) {
                 return eval(match.slice(1, -1));
             });
+            text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;
+
             return text;
         }
 
-        function handleClick(nodeId, parentDataId) {
+        function setNodeUniqueClass(node, className) {
+            const nodes = document.querySelectorAll('g.node');
+            nodes.forEach(nd => {
+                nd.classList.remove(className);
+                if (nd === node) {
+                    node.classList.add(className);
+                }
+            });
+        }
+
+        function nextStep() {
+            const nodes = document.querySelectorAll('g.node');
+
+            let found = false;
+            for (let i = 0; i < nodes.length; i++) {
+                if (nodes[i].matches('.activeStep')) {
+                    nodes[i].classList.remove("activeStep");
+
+                    if (i + 1 >= nodes.length)
+                        nodes[0].classList.add("activeStep");
+                    else
+                        nodes[++i].classList.add("activeStep");
+
+                    found = true;
+                }
+            }
+
+            if (!found)
+                nodes[0].classList.add("activeStep");
+        }
+
+        function handleClick(node, parentDataId) {
+
+            setNodeUniqueClass(node, "selectedStep");
+
             const info = document.querySelector('#stepInfo');
-            // alert('Node clicked: ' + nodeId + ' (' + parentDataId + ')');
             parentDataId = parentDataId.replace(":", "");
             var status = "<pending>";
             var runId = generateRandomUUID();
@@ -144,22 +187,22 @@ classDef activeStep stroke:#f00,stroke-width:4px;
                 });
         }
 
-
-
         function addClickHandlers() {
 
 
             const nodes = document.querySelectorAll('g.node');
             nodes.forEach(node => {
+                // node.classList.add("selectedStep");
+                // node.classList.remove("activeStep");
                 node.style.cursor = 'pointer';
                 node.addEventListener('click', (event) => {
                     const clickedNode = event.target.closest('g'); // Get the closest <g> element (the node)
                     // clickedNode.setAttribute("title" = "ttt");
                     clickedNode.setAttribute("cursor", "hand");
-                    const nodeId = clickedNode.id; // Get the ID of the clicked node
-                    const parentNode = clickedNode.parentElement; // Get the parent element
-                    const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute'; // Get the data-id attribute from parent
-                    handleClick(nodeId, parentDataId); // Pass both the node ID and parent's data-id to the click handler
+                    const nodeId = clickedNode.id;
+                    const parentNode = clickedNode.parentElement;
+                    const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute';
+                    handleClick(node, parentDataId);
                 });
             });
         }
