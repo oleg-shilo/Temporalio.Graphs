@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Page Title</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="">
+<style>
+    .mermaidTooltip {
+        font-family: courier;
+        white-space: pre;
+    }
+
+    table,
+    th,
+    td {
+        width: 400px;
+        min-height: 120px;
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+</style>
+
+<script>
+    currentStepInfo = "Withdraw&#13;Id: 1255261&#13;Start Date: 2021-09-01&#13;End Date: ---&#10;Duration: 2 mins";
+
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
+
+<body>
+
+    <div class="">
+        <h3>Workflow Visualisation</h3>
+        <p>Sample graph (Mermaid).</p>
+    </div>
+
+    <div class="mermaid"></div>
+    <pre id="err"></pre>
+
+    <p>
+        Step Info:
+    <table>
+        <tr>
+            <!-- you can make it more comprehensive; e.g. key-value pairs -->
+            <td class="stepInfo">
+                <div id="stepInfo">
+            </td>
+        </tr>
+    </table>
+    </p>
+
+    <hr>
+    <br>
+    <br>
+    <button onclick="mermaidDraw()">Render</button><br>
+    <br>
+    <textarea rows="4" cols="100" height="150px" rows="10">
+```mermaid
+%%{ init: { 'securityLevel': 'loose' } }%%
+flowchart LR
+s((Start)) --> Withdraw[Withdraw]:::activeStep --> 2:NeedToConvert(Need to convert?) -- yes --> CurrencyConvert[Convert Currency] --> 1:(Is TFN Known?) -- yes --> NotifyAto --> Deposit --> e((End))
+1:(Is TFN Known?) -- no --> TakeNonResidentTax --> Deposit
+2:NeedToConvert -- no --> 1:(Is TFN Known?)
+classDef activeStep stroke:#f00,stroke-width:4px;
+```</textarea>
+
+    <!-- <textarea rows="4" cols="100" height="150px" rows="10">flowchart LR -->
+    <!-- A["`var1=${VAR1}`"] --><!-- |"{VAR2}"| B("{VAR3}") -->
+    <!-- </textarea>  -->
+
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true
+        });
+        eleM = document.querySelector('.mermaid');
+        eleE = document.querySelector('#err');
+        setTimeout(mermaidDraw, 200);
+        async function mermaidDraw() {
+            try {
+                graphDefinition = await mermaidEval('LocalFile.md');
+                const {
+                    svg
+                } = await mermaid.render('graphDiv', graphDefinition);
+                eleM.innerHTML = svg;
+
+                setTimeout(addClickHandlers, 200);
+
+            } catch (err) {
+                if (err instanceof ReferenceError) {
+                    varname = err.message.split(' ')[0];
+                    window[varname] = varname;
+                    setTimeout(mermaidDraw, 0);
+                }
+                console.error(err);
+                eleE.insertAdjacentHTML('beforeend', `🚫${err.message}\n`);
+            }
+        };
+        async function mermaidEval(url) {
+            //const response = await fetch(url);
+            //text = await response.text();
+            text = document.querySelector('textarea').value;
+            if (!text.match(/^[a-zA-Z]/)) {
+                // markdown ```mermaid, remove first and last line
+                text = text.split('\n').slice(1, -1).join('\n');
+            }
+            text = text.replace(/"`.*?`"/g, function (match) {
+                return eval(match.slice(1, -1));
+            });
+            text = text.replace(/"\{.*?\}"/g, function (match) {
+                return eval(match.slice(1, -1));
+            });
+            return text;
+        }
+
+        function handleClick(nodeId, parentDataId) {
+            const info = document.querySelector('#stepInfo');
+            // alert('Node clicked: ' + nodeId + ' (' + parentDataId + ')');
+            parentDataId = parentDataId.replace(":", "");
+            var status = "<pending>";
+            var runId = generateRandomUUID();
+            var start = "...";
+            var end = "...";
+            var duration = "...";
+
+            if (parentDataId == "s" || parentDataId == "s") {
+                status = "completed";
+                const now = new Date(); // Get the current date and time
+                const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+                start = tenMinutesAgo.toLocaleString();
+                end = tenMinutesAgo.toLocaleString();
+                duration = "10 msec";
+            }
+            info.innerHTML = `Id: ${parentDataId}<br>Status: ${status}<br>RunId: ${runId}<br>Started: ${start}<br>Completed: ${end}<br>Duration: ${duration}`;
+
+        }
+
+        function generateRandomUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+                .replace(/[xy]/g, function (c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+        }
+
+
+
+        function addClickHandlers() {
+
+
+            const nodes = document.querySelectorAll('g.node');
+            nodes.forEach(node => {
+                node.style.cursor = 'pointer';
+                node.addEventListener('click', (event) => {
+                    const clickedNode = event.target.closest('g'); // Get the closest <g> element (the node)
+                    // clickedNode.setAttribute("title" = "ttt");
+                    clickedNode.setAttribute("cursor", "hand");
+                    const nodeId = clickedNode.id; // Get the ID of the clicked node
+                    const parentNode = clickedNode.parentElement; // Get the parent element
+                    const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute'; // Get the data-id attribute from parent
+                    handleClick(nodeId, parentDataId); // Pass both the node ID and parent's data-id to the click handler
+                });
+            });
+        }
+    </script>
+
+
+</body>
+
+</html>
