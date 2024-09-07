@@ -37,14 +37,15 @@
     <div class="">
         <h3>Workflow Visualization</h3>
         <p>Sample graph (Mermaid).</p>
-        <button onclick="nextStep()">next</button>
+
+        <button onclick="nextStep()">Next</button>
     </div>
 
     <div class="mermaid"></div>
     <pre id="err"></pre>
 
     <p>
-        Step Info:
+        Selected Step Details:
     <table>
         <tr>
             <!-- you can make it more comprehensive; e.g. key-value pairs -->
@@ -57,21 +58,31 @@
 
     <hr>
     <br>
-    <br>
     <button onclick="mermaidDraw()">Render</button><br>
     <br>
-    <textarea rows="4" cols="100" min-height="250px" rows="10">
+    <textarea rows="8" cols="100">
 ```mermaid
-%%{ init: { 'securityLevel': 'loose' } }%%
 flowchart LR
 s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes --> CurrencyConvert[Convert Currency] --> 1:(Is TFN Known?) -- yes --> NotifyAto --> Deposit --> e((End))
 1:(Is TFN Known?) -- no --> TakeNonResidentTax --> Deposit
 2:NeedToConvert -- no --> 1:(Is TFN Known?)
 ```</textarea>
+    <p>This static, no extra dependencies web page shows how to visualize workflow definition produced with
+        Temporalio.Graps.</p>
+    <p>The solution is ultimately minimalistic and if it is taken as a concept for the production codebase it needs
+        to be heavily "productionased".
+        <br> But it does demonstrate the fundamentals of creating an interactive workflow
+        diagram with a clear indication of the workflow overall progress and the execution details of every step.
+    </p>
+    <p>Click on the 'next' button to simulate detection of the workflow progress. In production you will need to
+        call the button event handler when the workflow progresses to the next step.<br>
+        Click node (step) to show the step details.</p>
 
     <script>
         mermaid.initialize({
-            startOnLoad: true
+            startOnLoad: true,
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'cardinal' },
+            securityLevel: 'loose'
         });
 
         eleM = document.querySelector('.mermaid');
@@ -118,9 +129,30 @@ s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes -
             text = text.replace(/"\{.*?\}"/g, function (match) {
                 return eval(match.slice(1, -1));
             });
+
+            // this can be used if you want to inject `click nodeId callback " "`
+
+            // let allNodes = text
+            //     .split(/\r?\n/)
+            //     .flatMap(x => x.split("-->"))
+            //     .map(x => x
+            //         .split("[")[0]
+            //         .split("(")[0]
+            //         .split("-")[0]
+            //         .trim());
+            // allNodes = Array.from(new Set(allNodes));
+
             text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;
 
             return text;
+        }
+
+        function toMermaidId(nodeText) {
+            return nodeText
+                .split("[")[0]
+                .split("(")[0]
+                .split("-")[0]
+                .trim();
         }
 
         function setNodeUniqueClass(node, className) {
@@ -154,28 +186,75 @@ s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes -
                 nodes[0].classList.add("activeStep");
         }
 
+        function isStarted(node) {
+            const nodes = document.querySelectorAll('g.node');
+
+            let found = -1;
+            for (let i = 0; i < nodes.length; i++) {
+                if (nodes[i].matches('.activeStep')) {
+                    found = i;
+                    if (nodes[i] === node) {
+                        return { started: true, finished: false };
+                    }
+                    break;
+                }
+            }
+
+            if (found !== -1) {
+                if (Array.from(nodes).slice(0, found).includes(node))
+                    return { started: true, finished: true };
+                else
+                    return { started: false, finished: false };
+            }
+
+            return false;
+        }
+
         function handleClick(node, parentDataId) {
 
             setNodeUniqueClass(node, "selectedStep");
 
             const info = document.querySelector('#stepInfo');
-            parentDataId = parentDataId.replace(":", "");
-            var status = "<pending>";
-            var runId = generateRandomUUID();
-            var start = "...";
-            var end = "...";
-            var duration = "...";
+            parentDataId = toMermaidId(parentDataId);
+            let status = "<pending>";
+            let runId = generateRandomUUID();
+            let start = "...";
+            let end = "...";
+            let duration = "...";
 
-            if (parentDataId == "s" || parentDataId == "s") {
-                status = "completed";
+            let stepDetails = isStarted(node);
+            if (stepDetails.started) {
+                status = stepDetails.finished ? "completed" : "In progress";
+
                 const now = new Date(); // Get the current date and time
                 const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
                 start = tenMinutesAgo.toLocaleString();
-                end = tenMinutesAgo.toLocaleString();
-                duration = "10 msec";
+                if (stepDetails.finished) {
+                    end = tenMinutesAgo.toLocaleString();
+                    duration = "45 sec";
+                }
             }
-            info.innerHTML = `Id: ${parentDataId}<br>Status: ${status}<br>RunId: ${runId}<br>Started: ${start}<br>Completed: ${end}<br>Duration: ${duration}`;
+            info.innerHTML = `Id: '${parentDataId}'<br>Status: ${status}<br>RunId: ${runId}<br>Started: ${start}<br>Completed: ${end}<br>Duration: ${duration}`;
 
+        }
+
+
+        function addClickHandlers() {
+
+            // it's possible to use `click nodeId callback " "` directly in the mermaid definition but it will means parsing the 
+            // definition, which only mermaid should do
+            const nodes = document.querySelectorAll('g.node');
+            nodes.forEach(node => {
+                node.style.cursor = 'pointer';
+                node.addEventListener('click', (event) => {
+                    const clickedNode = event.target.closest('g'); // Get the closest <g> element (the node)
+                    clickedNode.setAttribute("cursor", "hand");
+                    const nodeId = clickedNode.id;
+                    const parentNode = clickedNode.parentElement;
+                    const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute';
+                    handleClick(node, parentDataId);
+                });
+            });
         }
 
         function generateRandomUUID() {
@@ -185,26 +264,6 @@ s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes -
                     const v = c === 'x' ? r : (r & 0x3 | 0x8);
                     return v.toString(16);
                 });
-        }
-
-        function addClickHandlers() {
-
-
-            const nodes = document.querySelectorAll('g.node');
-            nodes.forEach(node => {
-                // node.classList.add("selectedStep");
-                // node.classList.remove("activeStep");
-                node.style.cursor = 'pointer';
-                node.addEventListener('click', (event) => {
-                    const clickedNode = event.target.closest('g'); // Get the closest <g> element (the node)
-                    // clickedNode.setAttribute("title" = "ttt");
-                    clickedNode.setAttribute("cursor", "hand");
-                    const nodeId = clickedNode.id;
-                    const parentNode = clickedNode.parentElement;
-                    const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute';
-                    handleClick(node, parentDataId);
-                });
-            });
         }
     </script>
 
