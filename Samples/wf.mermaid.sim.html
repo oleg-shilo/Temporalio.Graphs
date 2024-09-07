@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="">
 <style>
-    .mermaidTooltip {
-        font-family: courier;
-        white-space: pre;
+    .row {
+        display: flex;
     }
 
-    .selectedStep {
-        stroke: rgb(245, 175, 141);
-        stroke-width: 2px;
+    .column {
+        flex: 50%;
+        padding: 10px;
     }
 
     table,
@@ -57,26 +56,35 @@
     </p>
 
     <hr>
-    <br>
-    <button onclick="mermaidDraw()">Render</button><br>
-    <br>
-    <textarea rows="8" cols="100">
+
+    <div class="row">
+        <div class="column">
+            <br>
+            <button onclick="mermaidDraw()">Render</button><br>
+            <br>
+            <textarea rows="8" cols="100">
 ```mermaid
 flowchart LR
 s((Start)) --> Withdraw[Withdraw] --> 2:NeedToConvert(Need to convert?) -- yes --> CurrencyConvert[Convert Currency] --> 1:(Is TFN Known?) -- yes --> NotifyAto --> Deposit --> e((End))
 1:(Is TFN Known?) -- no --> TakeNonResidentTax --> Deposit
 2:NeedToConvert -- no --> 1:(Is TFN Known?)
 ```</textarea>
-    <p>This static, no extra dependencies web page shows how to visualize workflow definition produced with
-        Temporalio.Graps.</p>
-    <p>The solution is ultimately minimalistic and if it is taken as a concept for the production codebase it needs
-        to be heavily "productionased".
-        <br> But it does demonstrate the fundamentals of creating an interactive workflow
-        diagram with a clear indication of the workflow overall progress and the execution details of every step.
-    </p>
-    <p>Click on the 'next' button to simulate detection of the workflow progress. In production you will need to
-        call the button event handler when the workflow progresses to the next step.<br>
-        Click node (step) to show the step details.</p>
+        </div>
+        <div class="column">
+            <p>This static, no extra dependencies web page shows how to visualize workflow definition produced with
+                Temporalio.Graps by leveraging Mermaid rendering engine.</p>
+            <p>The solution is ultimately minimalistic and if it is taken as a concept for the production codebase it
+                needs
+                to be heavily "productionased".
+                <br> But it does demonstrate the fundamentals of creating an interactive workflow
+                diagram with a clear indication of the workflow overall progress and the execution details of every
+                step.
+            </p>
+            <p>Click on the 'next' button to simulate detection of the workflow progress. In production you will need to
+                call the button event handler when the workflow progresses to the next step.<br>
+                Click node (step) to show the step details.</p>
+        </div>
+    </div>
 
     <script>
         mermaid.initialize({
