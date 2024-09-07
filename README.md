@@ -104,7 +104,8 @@ When the graph is generated the result is either printed in the console output o
 
    You can use the graph definition to visualize WF in front-end app. Parsing/interpreting the definition is quite easy due to the very simple syntax.
 
-2. The second section is... well, secondary. It contains an alternative syntax of the WF definition -  Mermaid syntax. It is a great way to verify the accuracy of the generated graph. Just paste the section content in any Mermaid rendering host. IE GitHub markdown document renders Mermaid diagrams natively. Below is the Mermaid specification from the screenshot above that is rendered by Github: 
+2. The second section contains an alternative syntax of the WF definition - Mermaid syntax. It is a great way to verify the accuracy of the generated graph. It can also be used as a foundation for visualization of the live workflow (see interactive [visualization sample](Samples/wf.mermaid.sim.html)). 
+If you only want to verify the accuracy of te graph then paste the section content in any Mermaid rendering host. IE GitHub markdown document renders Mermaid diagrams natively. Below is the Mermaid specification from the screenshot above that is rendered by Github: 
 
    ````markdown
    ```mermaid
