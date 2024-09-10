@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
+using System.Linq.Expressions;
 
 [assembly: InternalsVisibleTo("Temporalio.Graphs.Tests")]
 
@@ -11,6 +12,25 @@ public class DecisionAttribute : Attribute
     // can add a member to store Decision description
     public string PositiveValue { get; set; } = true.ToString();
     public string NegativeValue { get; set; } = false.ToString();
+}
+public class GenericDecisionActivity
+{
+    [Activity]
+    [Decision]
+    public bool TakeDecision(bool result, string name)
+    {
+        return result;
+    }
+
+    static string GetMemberName(Expression<Func<bool>> expression)
+    {
+        if (expression.Body is MemberExpression memberExpression)
+        {
+            return memberExpression.Member.Name;
+        }
+
+        throw new InvalidOperationException("Expression is not a member access");
+    }
 }
 
 public class GraphPath

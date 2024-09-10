@@ -15,6 +15,7 @@ using Temporalio.Api.Update.V1;
 using System.Text;
 using Temporalio.Testing;
 using Temporalio.Worker;
+using System;
 
 namespace Temporalio.Graphs;
 public record ExecutionContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
@@ -96,12 +97,17 @@ public class GraphBuilder : IWorkerInterceptor
                         // mocked decision activity
                         Runtime.CurrentGraphPath.AddDecision(decision.Id, decision.Result, decision.Name);
 
-                        return decision.Result ? decisionInfo.PositiveValue : decisionInfo.NegativeValue;
+                        // return decision.Result ? decisionInfo.PositiveValue : decisionInfo.NegativeValue;
+                        return decision.Result;
                     }
                     else
                     {
                         // mocked normal activity
-                        return Runtime.CurrentGraphPath.AddStep(activityName);
+                        Runtime.CurrentGraphPath.AddStep(activityName);
+
+                        return activityMethod.ReturnType.IsValueType
+                            ? Activator.CreateInstance(activityMethod.ReturnType)
+                            : null;
                     }
                 }
                 else
@@ -148,6 +154,8 @@ public class GraphBuilder : IWorkerInterceptor
 
                 if (Runtime.IsBuildingGraph)
                 {
+                    Environment.SetEnvironmentVariable("TEMPORAL_GRAPH", "true");
+
                     var workflowAssembly = input.Instance.GetType().Assembly;
 
                     // Run WF with the DAG generator for all permutations of WF decisions (profiles)

@@ -80,21 +80,33 @@ public static class GenericExtensions
 
 public static class GraphsExtensions
 {
-    public static async Task<bool> Decision(this object workflow, Expression<Func<string>> activityCall, ActivityOptions options = null)
+    public static async Task<bool> Decision(this object workflow, Expression<Func<bool>> activityCall, ActivityOptions options = null)
     {
-        var positiveValue = true.ToString();
+        bool result = await Workflow.ExecuteActivityAsync(activityCall, options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+        return result;
+    }
+
+    public static async Task<bool> GenericDecision(this object workflow, Expression<Func<bool>> activityCall, string decisionName = null, ActivityOptions options = null)
+    {
+        var activityName = decisionName;
+        if (activityName.IsEmpty() && activityCall.Body is MemberExpression memberExpression)
+        {
+            activityName = memberExpression.Member.Name;
+        }
+
+        bool result = false;
         try
         {
-            var method = (MethodInfo)activityCall.Body.GetPropValue("Method");
-
-            var attribute = method.GetCustomAttribute<DecisionAttribute>();
-            if (attribute != null)
-                positiveValue = attribute.PositiveValue;
+            result = activityCall.Compile().Invoke();
         }
-        catch { }
+        catch
+        {
+            if (Environment.GetEnvironmentVariable("TEMPORAL_GRAPH") == null)
+                throw;
+        }
 
-        string result = await Workflow.ExecuteActivityAsync(activityCall, options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
-        return result == positiveValue;
+        result = await Workflow.ExecuteActivityAsync((GenericDecisionActivity b) => b.TakeDecision(result, activityName), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+        return result;
     }
 
     public static string ToSimpleMermaidName(this string name)

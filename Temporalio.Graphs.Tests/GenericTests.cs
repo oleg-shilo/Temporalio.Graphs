@@ -145,6 +145,14 @@ public class GenericTests
         //Assert.Contains($"{typeof(TestWorkflowDecisions)}.Second]", errorMessage);
     }
     [Fact]
+    public void Decision_GenericDecision()
+    {
+        Assert.Fail("not implemented");
+        //var result = new CodeDecisions();
+        //GenericDecisionActivity.TakeDecision(() => result.DecisionResult1, "fff");
+    }
+
+    [Fact]
     public void DagValidation_MissingActivity()
     {
         var type = typeof(TestWorkflowActivities);
@@ -198,6 +206,11 @@ public class GenericTests
         //Assert.Empty(permutations[decisions[0].Name].Plan);
         //Assert.Empty(permutations[decisions[1].Name].Plan);
     }
+}
+
+public class CodeDecisions
+{
+    public bool DecisionResult1 => true;
 }
 
 public class TestActivityDecisions
