@@ -36,7 +36,7 @@ public class GenericTests
     {
         var fullName = "Test.Activities.WithdrawAsync";
 
-        var simpleName = fullName.ToSimpleMermaidName();
+        var simpleName = fullName.ToSimpleNodeName();
 
         Assert.Equal("Withdraw", simpleName);
     }
@@ -46,7 +46,7 @@ public class GenericTests
     {
         var fullName = "d1{Test.Activities.NeedToConvertAsync}:yes";
 
-        var simpleName = fullName.ToSimpleMermaidName();
+        var simpleName = fullName.ToSimpleNodeName();
 
         Assert.Equal("d1{NeedToConvert}:yes", simpleName);
     }

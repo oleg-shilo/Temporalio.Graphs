@@ -42,7 +42,7 @@ if (isBuildingGraph)
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
         // GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
-        GraphOutputFile: null);
+        SplitNamesByWords: true);
 
     await workerOptions.ExecuteWorkerInMemory(
         (MoneyTransferWorkflow wf) => wf.RunAsync(null));

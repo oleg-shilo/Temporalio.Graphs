@@ -10,9 +10,6 @@ namespace Temporalio.Graphs;
 
 public class DecisionAttribute : Attribute
 {
-    // can add a member to store Decision description
-    public string PositiveValue { get; set; } = true.ToString();
-    public string NegativeValue { get; set; } = false.ToString();
 }
 
 public class GenericActivities

@@ -106,7 +106,7 @@ public class BankingActivities
     }
 
     [Activity]
-    [Decision(NegativeValue = "Not AUD")]
+    [Decision]
     public static bool NeedToConvert(PaymentDetails details)
     {
         return (details.Currency != "AUD");

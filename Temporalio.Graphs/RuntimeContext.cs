@@ -30,6 +30,7 @@ internal class RuntimeContext
             IsBuildingGraph = context.IsBuildingGraph;
             ExitAfterBuildingGraph = context.IsBuildingGraph;
             GraphOutputFile = context.GraphOutputFile;
+            SplitNamesByWords = context.SplitNamesByWords;
             return true;
         }
         return false;
@@ -37,6 +38,7 @@ internal class RuntimeContext
     public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlans.FirstOrDefault();
     public List<Dictionary<(string Name, int Index), bool>> DecisionsPlans = new();
     public bool IsBuildingGraph;
+    public bool SplitNamesByWords;
     public bool ExitAfterBuildingGraph;
     public string? GraphOutputFile;
     public GraphPath CurrentGraphPath = new GraphPath();

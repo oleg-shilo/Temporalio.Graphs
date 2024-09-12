@@ -3,6 +3,7 @@ using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
 using System.Linq.Expressions;
+using System.Text;
 
 [assembly: InternalsVisibleTo("Temporalio.Graphs.Tests")]
 
@@ -31,7 +32,9 @@ public class GraphPath
 public class GraphGenerator
 {
     public List<List<string>> Scenarios = new();
-    // simplify decicions ids
+
+    // split ByCharacterCase
+
     public void PrittyfyNodes()
     {
         var idMap = Scenarios
@@ -59,7 +62,7 @@ public class GraphGenerator
 
     public string ToPaths()
         => Scenarios
-        .Select(x => x.Select(x => x.ToSimpleMermaidName())
+        .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords())
                       .JoinBy(" > "))
         .JoinBy(NewLine);
 
@@ -80,7 +83,7 @@ public class GraphGenerator
         try
         {
             var uniqueGraphs = Scenarios
-                .Select(x => x.Select(x => x.ToSimpleMermaidName()).ToList())
+                .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords(isMermaid: true)).ToList())
                 .OrderByDescending(x => x.Count);
 
             var mermaidDefinition = new List<string>

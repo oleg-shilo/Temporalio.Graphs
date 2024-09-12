@@ -18,7 +18,7 @@ using Temporalio.Worker;
 using System;
 
 namespace Temporalio.Graphs;
-public record GraphBuilingContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
+public record GraphBuilingContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile = null, bool SplitNamesByWords = false);
 
 public class GraphBuilder : IWorkerInterceptor
 {
@@ -27,6 +27,7 @@ public class GraphBuilder : IWorkerInterceptor
     static internal Dictionary<string, RuntimeContext> Sessions = new();
 
     public static bool IsBuildingGraph => GraphBuilder.GetRuntimeContext()?.IsBuildingGraph == true;
+    public static bool SplitNamesByWords => GraphBuilder.GetRuntimeContext()?.SplitNamesByWords == true;
     static internal RuntimeContext GetRuntimeContext()
     {
         string runId;

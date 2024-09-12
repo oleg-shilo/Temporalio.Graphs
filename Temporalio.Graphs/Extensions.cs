@@ -10,6 +10,7 @@ using Temporalio.Worker;
 using Temporalio.Client;
 using System.Runtime.Intrinsics.Arm;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace Temporalio.Graphs;
 
@@ -70,6 +71,55 @@ public static class GenericExtensions
                 result = result.Substring(0, result.Length - pattern.Length);
         return result;
     }
+
+    internal static string SplitByWords(this string text, bool isMermaid = false)
+    {
+        if (!GraphBuilder.SplitNamesByWords)
+            return text;
+
+        var rawText = text.Replace("_", " ");
+
+        if (rawText.Contains("{"))
+        {
+            var parts = rawText.Split('{', '}');
+            var prefix = parts[0];
+            var name = parts[1];
+            var suffix = parts[2];
+
+            return $"{prefix}{{{name.SplitByCharCase()}}}{suffix}";
+        }
+        else
+        {
+            if (isMermaid)
+            {
+                var textView = rawText.SplitByCharCase();
+
+                if (textView.Contains(" ")) // more than a single word
+                    return $"{rawText}[{textView}]";
+                else
+                    return rawText;
+            }
+            else
+                return rawText.SplitByCharCase();
+        }
+    }
+    static string SplitByCharCase(this string text)
+    {
+        var words = new List<string>();
+        var word = new StringBuilder();
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(text[i]) && !char.IsUpper(text[i - 1]))
+            {
+                words.Add(word.ToString());
+                word.Clear();
+            }
+            word.Append(text[i]);
+        }
+        words.Add(word.ToString());
+        return words.JoinBy(" ").Trim();
+    }
+
     public static T CastTo<T>(this object obj) => (T)obj;
 
     public static string JoinBy(this IEnumerable<string> items, string separator)
@@ -114,13 +164,15 @@ public static class GenericExtensions
 }
 public static class GraphsExtensions
 {
-    public static string ToSimpleMermaidName(this string name)
+    public static string ToSimpleNodeName(this string name)
     {
         // activity:  "longName"
         // decision:  "d1{longName}:yes"
         var longName = name.Split('{').Last().Split('}').First();
 
+        // namespace.class.method
         var shortName = longName.Split('.').Last().TrimEnd("Async");
+
         return name.Replace(longName, shortName);
     }
     public static MethodInfo GetActivityMethod(this ActivityDefinition activity)
