@@ -8,21 +8,54 @@ using System.Diagnostics;
 using Temporalio.Testing;
 using Temporalio.Worker;
 using Temporalio.Client;
+using System.Runtime.Intrinsics.Arm;
+using Microsoft.Extensions.Options;
 
 namespace Temporalio.Graphs;
 
 public static class TemporalExtensions
 {
-    public async static Task ExecuteWorkerInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall)
+    public static TemporalWorkerOptions AddAllActivities<T>(this TemporalWorkerOptions options) where T : new()
+    {
+        options.AddAllActivities(new T());
+        return options;
+    }
+    public static TemporalWorkerOptions AddStaticActivitiesFrom<T>(this TemporalWorkerOptions options)
+    {
+        var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static)
+            .Where(m => m.ReturnType == typeof(Task) || m.ReturnType.IsGenericType && m.ReturnType.GetGenericTypeDefinition() == typeof(Task<>));
+
+        foreach (var method in methods)
+        {
+            var parameters = method.GetParameters().Select(p => Expression.Parameter(p.ParameterType, p.Name)).ToArray();
+            var call = Expression.Call(method, parameters);
+
+            var lambda = Expression.Lambda(call, parameters);
+            var compiledDelegate = lambda.Compile();
+
+            options.AddActivity(compiledDelegate);
+        }
+
+        return options;
+    }
+    public async static Task ExecuteWorkerInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall, bool rethrow = false)
     {
         await using var env = await WorkflowEnvironment.StartLocalAsync();
         using var worker = new TemporalWorker(env.Client, workerOptions);
         WorkflowOptions options = new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!);
+        try
+        {
 
-        await worker.ExecuteAsync(async () =>
-                                  {
-                                      var result = await ((ITemporalClient)worker.Client).ExecuteWorkflowAsync(workflowRunCall, options);
-                                  });
+            await worker.ExecuteAsync(async () =>
+                                      {
+                                          var result = await ((ITemporalClient)worker.Client).ExecuteWorkflowAsync(workflowRunCall, options);
+                                      });
+        }
+        catch (Exception)
+        {
+            if (rethrow)
+                throw;
+        }
 
     }
 }
@@ -53,6 +86,8 @@ public static class GenericExtensions
 
     public static string FullName(this MemberInfo info)
         => $"{info.DeclaringType.FullName}.{info.Name}";
+    public static int ToInt(this string text)
+        => int.Parse(text);
 
     public static string ChangeExtension(this string file, string newExtension)
         => Path.ChangeExtension(file, newExtension);
@@ -77,38 +112,8 @@ public static class GenericExtensions
           .GetValue(obj);
     }
 }
-
 public static class GraphsExtensions
 {
-    public static async Task<bool> Decision(this object workflow, Expression<Func<bool>> activityCall, ActivityOptions options = null)
-    {
-        bool result = await Workflow.ExecuteActivityAsync(activityCall, options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
-        return result;
-    }
-
-    public static async Task<bool> GenericDecision(this object workflow, Expression<Func<bool>> activityCall, string decisionName = null, ActivityOptions options = null)
-    {
-        var activityName = decisionName;
-        if (activityName.IsEmpty() && activityCall.Body is MemberExpression memberExpression)
-        {
-            activityName = memberExpression.Member.Name;
-        }
-
-        bool result = false;
-        try
-        {
-            result = activityCall.Compile().Invoke();
-        }
-        catch
-        {
-            if (Environment.GetEnvironmentVariable("TEMPORAL_GRAPH") == null)
-                throw;
-        }
-
-        result = await Workflow.ExecuteActivityAsync((GenericDecisionActivity b) => b.TakeDecision(result, activityName), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
-        return result;
-    }
-
     public static string ToSimpleMermaidName(this string name)
     {
         // activity:  "longName"

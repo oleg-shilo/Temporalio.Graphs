@@ -18,7 +18,7 @@ using Temporalio.Worker;
 using System;
 
 namespace Temporalio.Graphs;
-public record ExecutionContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
+public record GraphBuilingContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile);
 
 public class GraphBuilder : IWorkerInterceptor
 {
@@ -26,38 +26,27 @@ public class GraphBuilder : IWorkerInterceptor
 
     static internal Dictionary<string, RuntimeContext> Sessions = new();
 
-    public ExecutionContext Context { get; set; }
+    public static bool IsBuildingGraph => GraphBuilder.GetRuntimeContext()?.IsBuildingGraph == true;
+    static internal RuntimeContext GetRuntimeContext()
+    {
+        string runId;
+
+        if (ActivityExecutionContext.HasCurrent)
+            runId = ActivityExecutionContext.Current.Info.WorkflowRunId;
+        else if (Workflow.InWorkflow)
+            runId = Workflow.Info.RunId;
+        else
+            return null;
+
+        return Sessions.ContainsKey(runId) ? Sessions[runId] : null;
+    }
+
+    public GraphBuilingContext Context { get; set; }
 
     public GraphBuilder(Action stopWorker)
     {
         StopWorkflowWorker = stopWorker;
     }
-
-    public class RuntimeContext
-    {
-        public bool InitFrom(ExecuteWorkflowInput input)
-            => InitFrom(input.Args.OfType<ExecutionContext>().FirstOrDefault());
-
-        public bool InitFrom(Temporalio.Graphs.ExecutionContext context)
-        {
-            if (context != null)
-            {
-                IsBuildingGraph = context.IsBuildingGraph;
-                ExitAfterBuildingGraph = context.IsBuildingGraph;
-                GraphOutputFile = context.GraphOutputFile;
-                return true;
-            }
-            return false;
-        }
-        public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlan.FirstOrDefault();
-        public List<Dictionary<(string Name, int Index), bool>> DecisionsPlan = new();
-        public bool IsBuildingGraph;
-        public bool ExitAfterBuildingGraph;
-        public string? GraphOutputFile;
-        public GraphPath CurrentGraphPath = new GraphPath();
-        internal bool initialized = false;
-    }
-
     public WorkflowInboundInterceptor InterceptWorkflow(WorkflowInboundInterceptor nextInterceptor) => new WorkflowInbound(nextInterceptor, this.Context);
     public ActivityInboundInterceptor InterceptActivity(ActivityInboundInterceptor nextInterceptor) => new ActivityInbound(nextInterceptor);
 
@@ -84,9 +73,57 @@ public class GraphBuilder : IWorkerInterceptor
                 {
                     var activityMethod = input.Activity.GetActivityMethod();
                     var activityName = activityMethod.FullName();
+                    var decisionName = input.GetGenericActivityName();
+
+                    var nodeName = activityName;
+
+
+                    if (!decisionName.IsEmpty())
+                    {
+                        nodeName = decisionName;
+
+                        //check if the current plan already has this decision data
+                        var decisionExists = Runtime.CurrentDecisionsPlan
+                                                    .Any(x => x.Key.Name == decisionName);
+                        if (!decisionExists)
+                        {
+                            var currentPlan = Runtime.CurrentDecisionsPlan;
+                            var cloneOfCurrentPlan = currentPlan.ToDictionary(x => x.Key, x => x.Value);
+
+                            // add the new decision permutations to a current plan and to a clone of the current plan 
+                            // one decision - two permutations (plans
+                            currentPlan.Add((decisionName, decisionName.GetHashCode()), true);
+                            cloneOfCurrentPlan.Add((decisionName, decisionName.GetHashCode()), false);
+
+                            Runtime.DecisionsPlans.Add(cloneOfCurrentPlan);
+                        }
+                    }
+                    else
+                    {
+                        // it's not a generic decision but a user activity marked with the decision attribute
+                        var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
+
+                        if (decisionInfo != null)
+                        {
+                            var decisionExists = Runtime.CurrentDecisionsPlan
+                                                        .Any(x => x.Key.Name == activityName);
+                            if (!decisionExists)
+                            {
+                                var currentPlan = Runtime.CurrentDecisionsPlan;
+                                var cloneOfCurrentPlan = currentPlan.ToDictionary(x => x.Key, x => x.Value);
+
+                                // add the new decision permutations to a current plan and to a clone of the current plan 
+                                // one decision - two permutations (plans
+                                currentPlan.Add((activityName, activityName.GetHashCode()), true);
+                                cloneOfCurrentPlan.Add((activityName, activityName.GetHashCode()), false);
+
+                                Runtime.DecisionsPlans.Add(cloneOfCurrentPlan);
+                            }
+                        }
+                    }
 
                     var decision = Runtime.CurrentDecisionsPlan?
-                        .Where(x => x.Key.Name == activityName)
+                        .Where(x => x.Key.Name == nodeName)
                         .Select(x => new { Name = x.Key.Name, Id = x.Key.Index.ToString(), Result = x.Value })
                         .FirstOrDefault();
 
@@ -105,9 +142,26 @@ public class GraphBuilder : IWorkerInterceptor
                         // mocked normal activity
                         Runtime.CurrentGraphPath.AddStep(activityName);
 
-                        return activityMethod.ReturnType.IsValueType
-                            ? Activator.CreateInstance(activityMethod.ReturnType)
-                            : null;
+                        try
+                        {
+                            var type = activityMethod.ReturnType;
+                            var isTask = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>);
+                            if (isTask)
+                            {
+                                var result = Activator.CreateInstance(type.GetGenericArguments()[0]);
+                                return Task.FromResult(result);
+                            }
+                            else
+                            {
+                                return activityMethod.ReturnType.IsValueType
+                                ? Activator.CreateInstance(activityMethod.ReturnType)
+                                : null;
+                            }
+                        }
+                        catch
+                        {
+                            return null;
+                        }
                     }
                 }
                 else
@@ -136,8 +190,8 @@ public class GraphBuilder : IWorkerInterceptor
             }
         }
 
-        ExecutionContext context;
-        public WorkflowInbound(WorkflowInboundInterceptor next, ExecutionContext context) : base(next)
+        GraphBuilingContext context;
+        public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuilingContext context) : base(next)
         {
             this.context = context;
         }
@@ -162,29 +216,41 @@ public class GraphBuilder : IWorkerInterceptor
                     // Generating the complete WF diagram based on the analysts of all unique path graphs.
                     // MermaidGenerator will print diagram at disposal
 
-                    Runtime.DecisionsPlan.GeneratePermutationsFor(workflowAssembly.GetDecisions());
+                    //Runtime.DecisionsPlans.GeneratePermutationsFor(workflowAssembly.GetDecisions());
+                    Runtime.DecisionsPlans.Add(item: new Dictionary<(string Name, int Index), bool>());
 
                     var generator = new GraphGenerator();
 
-                    // run once if no permutations or run as many times as permutations count
+                    // if there is no decision nodes then there will be only once decision plan
+                    // Otherwise there will be as many as decisions permutations (graph paths)
+                    // IE:
+                    // no decisions: 1 path,
+                    // 1 decision:   2 paths,
+                    // 2 decisions:  4 paths,
+                    // 3 decisions:  8 paths,
+                    // . . .
 
-                    var totalPermutations = Runtime.DecisionsPlan.Count; // capture it now as the plan will be cleared as it executes
+                    while (Runtime.DecisionsPlans.Any())
+                        try
+                        {
+                            Runtime.CurrentGraphPath
+                                   .Clear()
+                                   .AddStep("Start");
 
-                    for (int i = 0; i < totalPermutations; i++)
-                    {
-                        Runtime.CurrentGraphPath
-                               .Clear()
-                               .AddStep("Start");
+                            // executing the original WF where the activities will be mocked
+                            await base.ExecuteWorkflowAsync(input);
 
-                        // executing the original WF where the activities will be mocked
-                        await base.ExecuteWorkflowAsync(input);
+                            Runtime.CurrentGraphPath.AddStep("End");
 
-                        Runtime.CurrentGraphPath.AddStep("End");
+                            generator.Scenarios.AddPath(Runtime.CurrentGraphPath);
+                        }
+                        finally
+                        {
+                            Runtime.DecisionsPlans.RemoveAt(0);
+                        }
 
-                        generator.Scenarios.AddPath(Runtime.CurrentGraphPath);
 
-                        Runtime.DecisionsPlan.RemoveAt(0);
-                    }
+                    generator.PrittyfyNodes();
 
                     var graphs = generator.ToPaths();
                     var mermaid = generator.ToMermaidSyntax();

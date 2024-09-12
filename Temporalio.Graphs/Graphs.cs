@@ -7,31 +7,6 @@ using System.Linq.Expressions;
 [assembly: InternalsVisibleTo("Temporalio.Graphs.Tests")]
 
 namespace Temporalio.Graphs;
-public class DecisionAttribute : Attribute
-{
-    // can add a member to store Decision description
-    public string PositiveValue { get; set; } = true.ToString();
-    public string NegativeValue { get; set; } = false.ToString();
-}
-public class GenericDecisionActivity
-{
-    [Activity]
-    [Decision]
-    public bool TakeDecision(bool result, string name)
-    {
-        return result;
-    }
-
-    static string GetMemberName(Expression<Func<bool>> expression)
-    {
-        if (expression.Body is MemberExpression memberExpression)
-        {
-            return memberExpression.Member.Name;
-        }
-
-        throw new InvalidOperationException("Expression is not a member access");
-    }
-}
 
 public class GraphPath
 {
@@ -56,6 +31,32 @@ public class GraphPath
 public class GraphGenerator
 {
     public List<List<string>> Scenarios = new();
+    // simplify decicions ids
+    public void PrittyfyNodes()
+    {
+        var idMap = Scenarios
+            .SelectMany(path => path.Select(node => node))
+            .Where(x => x.Contains("{"))
+            .Distinct()
+            .Select((x, i) => new { Id = x.Split("{").First(), SimplifiedId = i.ToString() })
+            .DistinctBy(x => x.Id)
+            .ToDictionary(x => x.Id, y => y.SimplifiedId);
+
+        for (int i = 0; i < Scenarios.Count; i++)
+        {
+            for (int j = 0; j < Scenarios[i].Count; j++)
+            {
+                var node = Scenarios[i][j];
+                if (node.Contains("{"))
+                {
+                    var id = node.Split("{").First();
+                    var simplifiedId = idMap[id];
+                    Scenarios[i][j] = node.Replace(id, simplifiedId);
+                }
+            }
+        }
+    }
+
     public string ToPaths()
         => Scenarios
         .Select(x => x.Select(x => x.ToSimpleMermaidName())

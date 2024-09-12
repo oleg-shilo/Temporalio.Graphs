@@ -6,6 +6,16 @@ using Temporalio.Graphs;
 using Temporalio.Activities;
 using Temporalio.Exceptions;
 
+public class StepResult
+{
+    public bool IsStarted { get; set; }
+    public bool IsComplete { get; set; }
+    public bool IsSuccess { get; set; }
+    public bool IsPdf { get; set; }
+    public bool IsEnglish { get; set; }
+    public object State { get; set; }
+}
+
 public class BankingActivities
 {
     [Activity]
@@ -97,16 +107,26 @@ public class BankingActivities
 
     [Activity]
     [Decision(NegativeValue = "Not AUD")]
-    public static string NeedToConvert(PaymentDetails details)
+    public static bool NeedToConvert(PaymentDetails details)
     {
-        return (details.Currency != "AUD").ToString();
+        return (details.Currency != "AUD");
     }
 
     [Activity]
-    [Decision()]
-    public static string IsTFN_Known(PaymentDetails details)
+    [Decision]
+    public static bool IsPdf(StepResult result)
     {
-        return true.ToString();
+        return (result?.IsPdf == true);
+    }
+
+    [Activity]
+    public StepResult ManualPublishAsync() => new StepResult { IsStarted = true, IsComplete = true, IsSuccess = true };
+
+    [Activity]
+    [Decision()]
+    public static bool IsTFN_Known(PaymentDetails details)
+    {
+        return true;
     }
 
     [Activity]

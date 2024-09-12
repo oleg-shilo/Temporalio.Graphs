@@ -29,6 +29,7 @@ var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QU
 
 workerOptions
     .AddAllActivities(activities)           // Register activities
+                                            //.AddAllActivities(new GenericDecisionActivity())           // Register activities
     .AddWorkflow<MoneyTransferWorkflow>();  // Register workflow
 
 // ========================================================================================
@@ -37,10 +38,11 @@ bool isBuildingGraph = args.Contains("-graph");
 
 if (isBuildingGraph)
 {
-    interceptor.Context = new Temporalio.Graphs.ExecutionContext(
+    interceptor.Context = new Temporalio.Graphs.GraphBuilingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
-        GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+        // GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+        GraphOutputFile: null);
 
     await workerOptions.ExecuteWorkerInMemory(
         (MoneyTransferWorkflow wf) => wf.RunAsync(null));

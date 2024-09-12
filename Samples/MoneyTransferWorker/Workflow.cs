@@ -12,6 +12,7 @@ using Temporalio.Api.Protocol.V1;
 using Temporalio.Worker.Interceptors;
 using System.Linq.Expressions;
 using System.Reflection;
+using Temporalio.Activities;
 
 [Workflow]
 public class MoneyTransferWorkflow
@@ -19,10 +20,17 @@ public class MoneyTransferWorkflow
     [WorkflowRun]
     public async Task<string> RunAsync(PaymentDetails details)
     {
+        StepResult result = await ExecuteActivityAsync(
+            (BankingActivities b) => b.ManualPublishAsync(), options);
+
+        //var isPdf = await this.GenericDecision(() => result.IsPdf);
+
+        bool isPdf = await WF.Decision(() => BankingActivities.IsPdf(result));
+
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);
 
-        bool needToConvert = await this.Decision(() => BankingActivities.NeedToConvert(details));
+        bool needToConvert = await WF.Decision(() => BankingActivities.NeedToConvert(details));
 
         if (needToConvert)
         {
@@ -30,7 +38,7 @@ public class MoneyTransferWorkflow
                 () => BankingActivities.CurrencyConvertAsync(details), options);
         }
 
-        bool isTFN_Known = await this.Decision(() => BankingActivities.IsTFN_Known(details));
+        bool isTFN_Known = await WF.Decision(() => BankingActivities.IsTFN_Known(details));
         if (isTFN_Known)
         {
             await ExecuteActivityAsync(
