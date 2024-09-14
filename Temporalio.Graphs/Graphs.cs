@@ -2,8 +2,6 @@ using System.Runtime.CompilerServices;
 using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
-using System.Linq.Expressions;
-using System.Text;
 
 [assembly: InternalsVisibleTo("Temporalio.Graphs.Tests")]
 
@@ -22,9 +20,12 @@ public class GraphPath
         Elements.Add(name);
         return $"DAG step: {name}"; // will be used as a WF runtime log entry
     }
-    public string AddDecision(string id, bool value, [CallerMemberName] string name = "")
+    public string AddDecision(string id, bool value, [CallerMemberName] string name = "", string resultText = "yes|no")
     {
-        Elements.Add($"{id}{{{name}}}:{(value ? "yes" : "no")}");
+        var resultValues = resultText.Split("|");
+        if (resultValues.Length != 2)
+            throw new ArgumentException($"The {nameof(resultText)} must contain two values separated by '|'.");
+        Elements.Add($"{id}{{{name}}}:{(value ? resultValues[0] : resultValues[1])}");
         return $"DAG decision: {name}"; // will be used as a WF runtime log entry
     }
 }
@@ -33,10 +34,9 @@ public class GraphGenerator
 {
     public List<List<string>> Scenarios = new();
 
-    // split ByCharacterCase
-
     public void PrittyfyNodes()
     {
+        // remove string hash based IDs with a simplified numeric ID that are just indexes of the nodes in the graph
         var idMap = Scenarios
             .SelectMany(path => path.Select(node => node))
             .Where(x => x.Contains("{"))
@@ -138,8 +138,7 @@ public class GraphGenerator
                 // `--> decision0{IsTFN_Known}:yes -->` into  `--> decision0{IsTFN_Known} -- yes -->`
                 // and make start/end into a circle shape
                 return text
-                    .Replace("}:no", "} -- no")
-                    .Replace("}:yes", "} -- yes")
+                    .Replace("}:", "} -- ")
                     .Replace("Start -->", "s((Start)) -->")
                     .Replace("--> End", "--> e((End))");
             }
@@ -169,27 +168,9 @@ public static class DagValidator
                         x.GetAttributes<DecisionAttribute>().IsEmpty())
             .Select(x => x.FullName());
 
-        var allDecisions = allAassemblyTypes.SelectMany(x => x.GetProperties())
-            .Where(x => x.GetAttributes<DecisionAttribute>().IsNotEmpty());
-
         var missingActivities = allActivities
             .Where(x => !allGraphElements.Contains(x))
             .ToList();
-
-        var missingDecisions = allDecisions
-            .Where(x =>
-            {
-                var yesDecision = $"{{{x}}}:yes";
-                var noDecision = $"{{{x}}}:no";
-
-                return
-                    !allGraphElements.Any(y => y.Contains(yesDecision)) ||
-                    !allGraphElements.Any(y => y.Contains(noDecision));
-            })
-            .Select(x => x.FullName())
-            .ToArray();
-
-        missingActivities.AddRange(missingDecisions);
 
         var message = "";
 

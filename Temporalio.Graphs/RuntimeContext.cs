@@ -23,24 +23,20 @@ internal class RuntimeContext
     public bool InitFrom(ExecuteWorkflowInput input)
         => InitFrom(input.Args.OfType<GraphBuilingContext>().FirstOrDefault());
 
-    public bool InitFrom(Temporalio.Graphs.GraphBuilingContext context)
+    public bool InitFrom(GraphBuilingContext context)
     {
         if (context != null)
         {
-            IsBuildingGraph = context.IsBuildingGraph;
-            ExitAfterBuildingGraph = context.IsBuildingGraph;
-            GraphOutputFile = context.GraphOutputFile;
-            SplitNamesByWords = context.SplitNamesByWords;
+            ClientRequest = context;
             return true;
         }
         return false;
     }
     public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlans.FirstOrDefault();
     public List<Dictionary<(string Name, int Index), bool>> DecisionsPlans = new();
-    public bool IsBuildingGraph;
-    public bool SplitNamesByWords;
-    public bool ExitAfterBuildingGraph;
-    public string? GraphOutputFile;
+    public bool IsBuildingGraph => ClientRequest?.IsBuildingGraph == true;
+    public bool SplitNamesByWords => ClientRequest?.SplitNamesByWords == true;
+    internal GraphBuilingContext ClientRequest = null;
     public GraphPath CurrentGraphPath = new GraphPath();
     internal bool initialized = false;
 }

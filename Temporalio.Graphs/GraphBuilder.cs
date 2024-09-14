@@ -16,9 +16,16 @@ using System.Text;
 using Temporalio.Testing;
 using Temporalio.Worker;
 using System;
+using System.Collections.Generic;
 
 namespace Temporalio.Graphs;
-public record GraphBuilingContext(bool IsBuildingGraph, bool ExitAfterBuildingGraph, string? GraphOutputFile = null, bool SplitNamesByWords = false);
+public record GraphBuilingContext(
+        bool IsBuildingGraph,
+        bool ExitAfterBuildingGraph,
+        string? GraphOutputFile = null,
+        bool SplitNamesByWords = false,
+        bool DoValidation = true,
+        bool MermaidOnly = false);
 
 public class GraphBuilder : IWorkerInterceptor
 {
@@ -74,10 +81,9 @@ public class GraphBuilder : IWorkerInterceptor
                 {
                     var activityMethod = input.Activity.GetActivityMethod();
                     var activityName = activityMethod.FullName();
-                    var decisionName = input.GetGenericActivityName();
+                    (var decisionName, var resultText) = input.GetGenericActivityName();
 
-                    var nodeName = activityName;
-
+                    var nodeName = "";
 
                     if (!decisionName.IsEmpty())
                     {
@@ -85,41 +91,18 @@ public class GraphBuilder : IWorkerInterceptor
 
                         //check if the current plan already has this decision data
                         var decisionExists = Runtime.CurrentDecisionsPlan
-                                                    .Any(x => x.Key.Name == decisionName);
+                                                    .Any(x => x.Key.Name == nodeName);
                         if (!decisionExists)
                         {
                             var currentPlan = Runtime.CurrentDecisionsPlan;
                             var cloneOfCurrentPlan = currentPlan.ToDictionary(x => x.Key, x => x.Value);
 
-                            // add the new decision permutations to a current plan and to a clone of the current plan 
-                            // one decision - two permutations (plans
+                            // add the new decision permutations to the current plan and to a new clone of the current plan 
+                            // one decision - two permutations 
                             currentPlan.Add((decisionName, decisionName.GetHashCode()), true);
                             cloneOfCurrentPlan.Add((decisionName, decisionName.GetHashCode()), false);
 
                             Runtime.DecisionsPlans.Add(cloneOfCurrentPlan);
-                        }
-                    }
-                    else
-                    {
-                        // it's not a generic decision but a user activity marked with the decision attribute
-                        var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
-
-                        if (decisionInfo != null)
-                        {
-                            var decisionExists = Runtime.CurrentDecisionsPlan
-                                                        .Any(x => x.Key.Name == activityName);
-                            if (!decisionExists)
-                            {
-                                var currentPlan = Runtime.CurrentDecisionsPlan;
-                                var cloneOfCurrentPlan = currentPlan.ToDictionary(x => x.Key, x => x.Value);
-
-                                // add the new decision permutations to a current plan and to a clone of the current plan 
-                                // one decision - two permutations (plans
-                                currentPlan.Add((activityName, activityName.GetHashCode()), true);
-                                cloneOfCurrentPlan.Add((activityName, activityName.GetHashCode()), false);
-
-                                Runtime.DecisionsPlans.Add(cloneOfCurrentPlan);
-                            }
                         }
                     }
 
@@ -133,7 +116,7 @@ public class GraphBuilder : IWorkerInterceptor
                         var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
 
                         // mocked decision activity
-                        Runtime.CurrentGraphPath.AddDecision(decision.Id, decision.Result, decision.Name);
+                        Runtime.CurrentGraphPath.AddDecision(decision.Id, decision.Result, decision.Name, resultText);
 
                         // return decision.Result ? decisionInfo.PositiveValue : decisionInfo.NegativeValue;
                         return decision.Result;
@@ -155,8 +138,8 @@ public class GraphBuilder : IWorkerInterceptor
                             else
                             {
                                 return activityMethod.ReturnType.IsValueType
-                                ? Activator.CreateInstance(activityMethod.ReturnType)
-                                : null;
+                                    ? Activator.CreateInstance(activityMethod.ReturnType)
+                                    : null;
                             }
                         }
                         catch
@@ -204,20 +187,16 @@ public class GraphBuilder : IWorkerInterceptor
                 // if we are running on a remote temporal server user may decide to push the custom context
                 // otherwise we will use the context from the current execution (obtained during worker initialization)
                 if (!Runtime.InitFrom(input))
-                    if (!Runtime.InitFrom(this.context))
-                        throw new ApplicationException("Execution context object was not supplied.");
+                    Runtime.InitFrom(this.context);
 
                 if (Runtime.IsBuildingGraph)
                 {
-                    Environment.SetEnvironmentVariable("TEMPORAL_GRAPH", "true");
-
                     var workflowAssembly = input.Instance.GetType().Assembly;
 
                     // Run WF with the DAG generator for all permutations of WF decisions (profiles)
                     // Generating the complete WF diagram based on the analysts of all unique path graphs.
                     // MermaidGenerator will print diagram at disposal
 
-                    //Runtime.DecisionsPlans.GeneratePermutationsFor(workflowAssembly.GetDecisions());
                     Runtime.DecisionsPlans.Add(item: new Dictionary<(string Name, int Index), bool>());
 
                     var generator = new GraphGenerator();
@@ -259,26 +238,30 @@ public class GraphBuilder : IWorkerInterceptor
 
                     var result = new StringBuilder();
 
-                    result.AppendLine("=====================")
-                          .AppendLine(graphs)
-                          .AppendLine("--------")
-                          .AppendLine(mermaid)
-                          .AppendLine("--------")
-                          .AppendLine(validationResult)
-                          .AppendLine("=====================");
+                    if (!Runtime.ClientRequest.MermaidOnly)
+                        result.AppendLine(graphs)
+                              .AppendLine("--------");
 
-                    if (Runtime.GraphOutputFile.IsNotEmpty())
+                    result.AppendLine(mermaid);
+
+                    if (Runtime.ClientRequest.DoValidation)
+                        result.AppendLine("--------")
+                              .AppendLine(validationResult);
+
+                    if (Runtime.ClientRequest.GraphOutputFile.IsNotEmpty())
                     {
                         Console.WriteLine();
-                        Console.WriteLine($"The WF graph is saved to `{Runtime.GraphOutputFile}`.");
-                        File.WriteAllText(Runtime.GraphOutputFile, result.ToString());
+                        Console.WriteLine($"The WF graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
+                        File.WriteAllText(Runtime.ClientRequest.GraphOutputFile, result.ToString());
                     }
                     else
                     {
-                        Console.WriteLine(result.ToString());
+                        Console.WriteLine("=====================");
+                        Console.WriteLine(result.ToString().Trim());
+                        Console.WriteLine("=====================");
                     }
 
-                    if (Runtime.ExitAfterBuildingGraph)
+                    if (Runtime.ClientRequest.ExitAfterBuildingGraph)
                     {
                         StopWorkflowWorker();
                     }
@@ -293,6 +276,11 @@ public class GraphBuilder : IWorkerInterceptor
             catch (Exception e)
             {
                 throw new ApplicationFailureException("Assertion failed", e, "AssertFail");
+            }
+            finally
+            {
+                if (Sessions.ContainsKey(Info.RunId))
+                    Sessions.Remove(Info.RunId);
             }
         }
     }

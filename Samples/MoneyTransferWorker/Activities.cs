@@ -6,23 +6,17 @@ using Temporalio.Graphs;
 using Temporalio.Activities;
 using Temporalio.Exceptions;
 
-public class StepResult
-{
-    public bool IsStarted { get; set; }
-    public bool IsComplete { get; set; }
-    public bool IsSuccess { get; set; }
-    public bool IsPdf { get; set; }
-    public bool IsEnglish { get; set; }
-    public object State { get; set; }
-}
-
 public class BankingActivities
 {
     [Activity]
     public async Task<string> WithdrawAsync(PaymentDetails details)
     {
+        //Console.WriteLine($"Withdrawing ${details.Amount} from account {details.SourceAccount}.");
+        Console.WriteLine($">> {nameof(WithdrawAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank1.example.com");
-        Console.WriteLine($"Withdrawing ${details.Amount} from account {details.SourceAccount}.");
+
         try
         {
             return await bankService.WithdrawAsync(details.SourceAccount, details.Amount, details.ReferenceId).ConfigureAwait(false);
@@ -38,8 +32,11 @@ public class BankingActivities
     [Activity]
     public static async Task<string> DepositAsync(PaymentDetails details)
     {
+        //Console.WriteLine($"Depositing ${details.Amount} into account {details.TargetAccount}.");
+        Console.WriteLine($">> {nameof(DepositAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank2.example.com");
-        Console.WriteLine($"Depositing ${details.Amount} into account {details.TargetAccount}.");
 
         // Uncomment below and comment out the try-catch block below to simulate unknown failure
         //*
@@ -61,8 +58,12 @@ public class BankingActivities
     [Activity]
     public static async Task<string> RefundAsync(PaymentDetails details)
     {
+        //Console.WriteLine($"Refunding ${details.Amount} to account {details.SourceAccount}.");
+        Console.WriteLine($">> {nameof(RefundAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank1.example.com");
-        Console.WriteLine($"Refunding ${details.Amount} to account {details.SourceAccount}.");
+
         try
         {
             return await bankService.RefundAsync(details.SourceAccount, details.Amount, details.ReferenceId);
@@ -76,6 +77,9 @@ public class BankingActivities
     [Activity]
     public static async Task<string> CurrencyConvertAsync(PaymentDetails details)
     {
+        Console.WriteLine($">> {nameof(CurrencyConvertAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank1.example.com");
 
         try
@@ -92,8 +96,11 @@ public class BankingActivities
     [Activity]
     public static async Task<string> NotifyAtoAsync(PaymentDetails details)
     {
+        //Console.WriteLine($"CurrencyConvertAsync ${details.Amount} to account {details.SourceAccount}.");
+        Console.WriteLine($">> {nameof(NotifyAtoAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank1.example.com");
-        Console.WriteLine($"CurrencyConvertAsync ${details.Amount} to account {details.SourceAccount}.");
         try
         {
             var referenceId = await bankService.NotifyAtoAsync(details.Amount, details.ReferenceId);
@@ -109,29 +116,26 @@ public class BankingActivities
     [Decision]
     public static bool NeedToConvert(PaymentDetails details)
     {
+        Console.WriteLine($">> {nameof(NeedToConvert)}?");
+        Task.Delay(2000).Wait();
         return (details.Currency != "AUD");
     }
-
-    [Activity]
-    [Decision]
-    public static bool IsPdf(StepResult result)
-    {
-        return (result?.IsPdf == true);
-    }
-
-    [Activity]
-    public StepResult ManualPublishAsync() => new StepResult { IsStarted = true, IsComplete = true, IsSuccess = true };
 
     [Activity]
     [Decision()]
     public static bool IsTFN_Known(PaymentDetails details)
     {
+        Console.WriteLine($">> {nameof(IsTFN_Known)}?");
+        Task.Delay(2000).Wait();
         return true;
     }
 
     [Activity]
     public static async Task<string> TakeNonResidentTaxAsync(PaymentDetails details)
     {
+        Console.WriteLine($">> {nameof(TakeNonResidentTaxAsync)}");
+        await Task.Delay(2000);
+
         var bankService = new BankingService("bank1.example.com");
 
         try

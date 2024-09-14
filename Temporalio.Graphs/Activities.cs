@@ -10,20 +10,23 @@ namespace Temporalio.Graphs;
 
 public class DecisionAttribute : Attribute
 {
+    public string PositiveResultName { get; set; } = "Yes";
+    public string NegativeResultName { get; set; } = "No";
 }
 
 public class GenericActivities
 {
     [Activity]
     [Decision]
-    public bool MakeDecision(bool result, string name)
+    public bool MakeDecision(bool result, string name, string resultText)
     {
         return result;
     }
 }
+
 static class GenericActivitiesExtension
 {
-    public static string GetGenericActivityName(this ExecuteActivityInput input)
+    public static (string name, string resultText) GetGenericActivityName(this ExecuteActivityInput input)
     {
         var activityMethod = input.Activity.GetActivityMethod();
         var activityName = activityMethod.FullName();
@@ -31,14 +34,23 @@ static class GenericActivitiesExtension
         if (activityMethod.DeclaringType == typeof(GenericActivities) &&
             activityMethod.Name == nameof(GenericActivities.MakeDecision))
         {
-            // activityMethod: "public bool MakeDecision(bool result, string name)"
+            // args will always have 3 args
+            // activityMethod: bool MakeDecision(bool result, string name, string resultText)
 
-            // IE: "new StepResult().IsPdf"
-            var decisionName = input.Args.Last().ToString().Split('.').Last();
+            // IE: name "new StepResult().IsPdf"
+            var decisionName = input.Args[1].ToString().Split('.').Last();
             decisionName = decisionName.Split("=>").Last().Trim();
 
-            return decisionName;
+
+            return (decisionName, input.Args[2]?.ToString() ?? "");
         }
-        return null;
+
+        var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
+        if (decisionInfo != null)
+        {
+            return (activityName, $"{decisionInfo.PositiveResultName}|{decisionInfo.NegativeResultName}");
+        }
+
+        return default;
     }
 }

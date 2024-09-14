@@ -20,13 +20,6 @@ public class MoneyTransferWorkflow
     [WorkflowRun]
     public async Task<string> RunAsync(PaymentDetails details)
     {
-        StepResult result = await ExecuteActivityAsync(
-            (BankingActivities b) => b.ManualPublishAsync(), options);
-
-        //var isPdf = await this.GenericDecision(() => result.IsPdf);
-
-        bool isPdf = await WF.Decision(() => BankingActivities.IsPdf(result));
-
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);
 

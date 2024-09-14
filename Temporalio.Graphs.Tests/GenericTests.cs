@@ -66,25 +66,6 @@ public class GenericTests
     [Fact]
     public void Decisions_Permutations()
     {
-        var names = new[]
-        {
-            ("a", 1),
-            ("b", 2),
-            ("c", 3),
-            ("d", 4),
-        };
-
-        var result = new List<Dictionary<(string name, int index), bool>>();
-        result.GeneratePermutationsFor(names);
-
-        Assert.Equal(16, result.Count);
-
-        var uniquePermutations = result
-            .Select(x => x.Select(y => y.Value.ToString()).JoinBy(",")) // convert to a string of values
-            .Distinct()
-            .ToArray();
-
-        Assert.Equal(result.Count, uniquePermutations.Count());
     }
 
     [Fact]

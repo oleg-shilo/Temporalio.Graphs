@@ -1,15 +1,10 @@
-using System.Runtime.CompilerServices;
 using static System.Environment;
 using Temporalio.Activities;
 using System.Reflection;
 using System.Linq.Expressions;
-using Temporalio.Workflows;
-using System.Diagnostics;
 using Temporalio.Testing;
 using Temporalio.Worker;
 using Temporalio.Client;
-using System.Runtime.Intrinsics.Arm;
-using Microsoft.Extensions.Options;
 using System.Text;
 
 namespace Temporalio.Graphs;
@@ -21,6 +16,7 @@ public static class TemporalExtensions
         options.AddAllActivities(new T());
         return options;
     }
+
     public static TemporalWorkerOptions AddStaticActivitiesFrom<T>(this TemporalWorkerOptions options)
     {
         var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -39,6 +35,7 @@ public static class TemporalExtensions
 
         return options;
     }
+
     public async static Task ExecuteWorkerInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall, bool rethrow = false)
     {
         await using var env = await WorkflowEnvironment.StartLocalAsync();
@@ -103,6 +100,15 @@ public static class GenericExtensions
                 return rawText.SplitByCharCase();
         }
     }
+    static string Capitalise(this string text)
+    {
+        if (text.IsNotEmpty())
+        {
+            if (!char.IsUpper(text.First()))
+                return text.Substring(0, 1).ToUpper() + text.Substring(1, text.Length - 1);
+        }
+        return text;
+    }
     static string SplitByCharCase(this string text)
     {
         var words = new List<string>();
@@ -117,7 +123,7 @@ public static class GenericExtensions
             word.Append(text[i]);
         }
         words.Add(word.ToString());
-        return words.JoinBy(" ").Trim();
+        return words.JoinBy(" ").Trim().Capitalise();
     }
 
     public static T CastTo<T>(this object obj) => (T)obj;
@@ -136,14 +142,10 @@ public static class GenericExtensions
 
     public static string FullName(this MemberInfo info)
         => $"{info.DeclaringType.FullName}.{info.Name}";
-    public static int ToInt(this string text)
-        => int.Parse(text);
-
-    public static string ChangeExtension(this string file, string newExtension)
-        => Path.ChangeExtension(file, newExtension);
 
     public static T[] GetAttributes<T>(this MemberInfo info, bool inherit = true)
         => info.GetCustomAttributes(typeof(T), inherit).Cast<T>().ToArray();
+
     public static dynamic GetFieldValue(this object obj, string value, BindingFlags flag = BindingFlags.Default)
     {
         return obj
@@ -162,7 +164,7 @@ public static class GenericExtensions
           .GetValue(obj);
     }
 }
-public static class GraphsExtensions
+static class GraphsExtensions
 {
     public static string ToSimpleNodeName(this string name)
     {
@@ -175,6 +177,7 @@ public static class GraphsExtensions
 
         return name.Replace(longName, shortName);
     }
+
     public static MethodInfo GetActivityMethod(this ActivityDefinition activity)
     {
         // there is no other way to access the actual method that is being invoked by the activity
@@ -184,40 +187,5 @@ public static class GraphsExtensions
         object target1 = invoker1.Target;
         var method = (MethodInfo)target1.GetFieldValue("method");
         return method;
-    }
-
-    public static void GeneratePermutationsFor(this List<Dictionary<(string name, int index), bool>> result, params (string, int)[] names)
-        => GeneratePermutations(result, names, 0, new bool[names.Count()]);
-
-    static void GeneratePermutations(List<Dictionary<(string name, int index), bool>> result, (string, int)[] names, int index, bool[] currentPermutation)
-    {
-        bool[] values = { true, false };
-
-        if (index == currentPermutation.Length)
-        {
-            //Debug.WriteLine(currentPermutation.Select((x, i) => $"{names[i]}: {x}").JoinBy(", "));
-            result.Add(
-                currentPermutation
-                    .Select((x, i) => new { name = (names[i], i), value = x })
-                    .ToDictionary(x => x.name.Item1, x => x.value));
-            return;
-        }
-
-        // Tail-recursive calls
-        foreach (bool value in values)
-        {
-            currentPermutation[index] = value;
-            GeneratePermutations(result, names, index + 1, currentPermutation);
-        }
-    }
-
-    public static (string Name, int Index)[] GetDecisions(this Assembly assembly)
-    {
-        return assembly
-            .GetTypes()
-            .SelectMany(t => t.GetMethods())
-            .Where(p => p.GetCustomAttributes<DecisionAttribute>().Any())
-            .Select((m, i) => (m.FullName(), i))
-            .ToArray();
     }
 }
