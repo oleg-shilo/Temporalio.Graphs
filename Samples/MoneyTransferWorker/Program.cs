@@ -28,8 +28,8 @@ var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QU
 };
 
 workerOptions
+    .AddAllActivities<Temporalio.Graphs.GenericActivities>()
     .AddAllActivities(activities)           // Register activities
-                                            //.AddAllActivities(new GenericDecisionActivity())           // Register activities
     .AddWorkflow<MoneyTransferWorkflow>();  // Register workflow
 
 // ========================================================================================
@@ -42,7 +42,12 @@ if (isBuildingGraph)
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
         // GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
-        SplitNamesByWords: true);
+        SplitNamesByWords: true,
+        StartNode: "s((In))",
+        EndNode: "e((Out))"
+        //StartNode: "Start",
+        //EndNode: "End"
+        );
 
     await workerOptions.ExecuteWorkerInMemory(
         (MoneyTransferWorkflow wf) => wf.RunAsync(null));

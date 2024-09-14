@@ -28,7 +28,7 @@ public class MoneyTransferWorkflow
         if (needToConvert)
         {
             await ExecuteActivityAsync(
-                () => BankingActivities.CurrencyConvertAsync(details), options);
+                () => BankingActivities.ConvertCurrencyAsync(details), options);
         }
 
         bool isTFN_Known = await WF.Decision(() => BankingActivities.IsTFN_Known(details));
@@ -61,25 +61,30 @@ public class MoneyTransferWorkflow
 
         // need to retrieve the decision value so it can be recorded during the graph generation
 
-        //if (Decisions.ActiveProfile.DepositFailed)
-        //{
-        //    try
-        //    {
-        //        // if the deposit fails, attempt to refund the withdrawal
-        //        string refundResult = await Workflow.ExecuteActivityAsync(
-        //            () => BankingActivities.RefundAsync(details), options);
+        var isIllegal = await WF.WaitConditionAsync(
+               () => interpolCheck,
+               TimeSpan.FromSeconds(2)
+           );
 
-        //        // If refund is successful, but deposit failed
-        //        throw new ApplicationFailureException($"Failed to deposit money into account {details.TargetAccount}. Money returned to {details.SourceAccount}. Cause: {depositError}");
-        //    }
-        //    catch (ApplicationFailureException refundEx)
-        //    {
-        //        // If both deposit and refund fail
-        //        throw new ApplicationFailureException($"Failed to deposit money into account {details.TargetAccount}. Money could not be returned to {details.SourceAccount}. Cause: {refundEx.Message}", refundEx);
-        //    }
-        //}
-        //else
+        if (isIllegal)
+        {
+            await Workflow.ExecuteActivityAsync(
+               () => BankingActivities.RefundAsync(details), options);
+
+            await Workflow.ExecuteActivityAsync(
+               () => BankingActivities.NotifyPoliceAsync(details), options);
+        }
+
         return depositActionResult;
+    }
+
+    bool interpolCheck = false;
+
+    [WorkflowSignal]
+    public Task FlagAsIllegal()
+    {
+        interpolCheck = true;
+        return Task.CompletedTask;
     }
 
     static ActivityOptions options = new ActivityOptions

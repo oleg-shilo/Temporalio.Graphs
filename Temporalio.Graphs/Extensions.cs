@@ -78,6 +78,7 @@ public static class GenericExtensions
 
         if (rawText.Contains("{"))
         {
+            // 2{isPdf}:No
             var parts = rawText.Split('{', '}');
             var prefix = parts[0];
             var name = parts[1];
@@ -90,14 +91,19 @@ public static class GenericExtensions
             if (isMermaid)
             {
                 var textView = rawText.SplitByCharCase();
-
-                if (textView.Contains(" ")) // more than a single word
-                    return $"{rawText}[{textView}]";
-                else
-                    return rawText;
+                if (!textView.Contains("(") && !textView.Contains("[")) // has no aliases defined
+                {
+                    if (textView.Contains(" ")) // more than a single word
+                        return $"{rawText}[{textView}]";
+                }
+                return rawText;
             }
             else
-                return rawText.SplitByCharCase();
+                return rawText
+                    .SplitByCharCase()
+                    .Replace("s((", "", StringComparison.OrdinalIgnoreCase)
+                    .Replace("e((", "", StringComparison.OrdinalIgnoreCase)
+                    .Replace("))", "");
         }
     }
     static string Capitalise(this string text)
@@ -123,7 +129,7 @@ public static class GenericExtensions
             word.Append(text[i]);
         }
         words.Add(word.ToString());
-        return words.JoinBy(" ").Trim().Capitalise();
+        return words.Select(x => x.Trim()).JoinBy(" ").Trim().Capitalise();
     }
 
     public static T CastTo<T>(this object obj) => (T)obj;
@@ -176,6 +182,16 @@ static class GraphsExtensions
         var shortName = longName.Split('.').Last().TrimEnd("Async");
 
         return name.Replace(longName, shortName);
+    }
+
+    public static string DecorateSignals(this string name)
+    {
+        if (name.Contains(":&sgnl;"))
+            name = name
+                .Replace(":&sgnl;", "")
+                .Replace("{", "{{")
+                .Replace("}", "}}");
+        return name;
     }
 
     public static MethodInfo GetActivityMethod(this ActivityDefinition activity)

@@ -59,6 +59,12 @@ public class BankingService
         await Task.Delay(100);
         return GenerateTransactionId("R");
     }
+    public async Task<string> NotifyPoliceAsync(int amount, string referenceId)
+    {
+        await Task.Delay(100);
+        return GenerateTransactionId("R");
+    }
+
     public async Task<(int, string)> TakeNonResidentTaxAsync(int amount, string referenceId)
     {
         await Task.Delay(100);

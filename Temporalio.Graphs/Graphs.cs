@@ -71,6 +71,58 @@ public class GraphGenerator
         if (Scenarios.IsEmpty())
             return "";
 
+        try
+        {
+            var uniqueGraphs = Scenarios
+                .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords(isMermaid: true).DecorateSignals()).ToList())
+                .OrderByDescending(x => x.Count);
+
+            var mermaidDefinition = new List<string>
+            {
+                "```mermaid",
+                "flowchart LR"
+            };
+
+            foreach (List<string> path in uniqueGraphs)
+            {
+                for (int i = 1; i < path.Count; i++) // will have at least two nodes: start and end
+                {
+                    var start = path[i - 1].Trim();
+                    var end = path[i].Split(":").First().Trim();
+                    var transition = $"{start} --> {end}";
+                    if (!mermaidDefinition.Contains(transition))
+                        mermaidDefinition.Add(transition);
+                }
+            }
+            mermaidDefinition.Add("```");
+
+            string EnsureSyntax(string text)
+            {
+                // converting to mermaid syntax
+                // `--> decision0{IsTFN_Known}:yes -->` into  `--> decision0{IsTFN_Known} -- yes -->`
+                // and make start/end into a circle shape
+                return text
+                    .Replace("}:", "} -- ")
+                    .Replace("Start -->", "s((Start)) -->")
+                    .Replace("--> End", "--> e((End))");
+            }
+
+            mermaidDefinition = mermaidDefinition.Select(EnsureSyntax).ToList();
+
+            return mermaidDefinition.JoinBy(NewLine);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Cannot generate mermaid Diagram: " + ex.Message);
+            return "";
+        }
+    }
+
+    public string ToMermaidCompactSyntax()
+    {
+        if (Scenarios.IsEmpty())
+            return "";
+
         // The following technique is used to reduce the number of steps in the graph:
         // - Find the longest graph and add it to the mermaid definition.
         // - Then for each remaining graph, find the unique sequence of elements that are not
@@ -83,7 +135,7 @@ public class GraphGenerator
         try
         {
             var uniqueGraphs = Scenarios
-                .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords(isMermaid: true)).ToList())
+                .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords(isMermaid: true).DecorateSignals()).ToList())
                 .OrderByDescending(x => x.Count);
 
             var mermaidDefinition = new List<string>

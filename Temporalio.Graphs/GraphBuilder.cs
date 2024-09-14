@@ -25,7 +25,9 @@ public record GraphBuilingContext(
         string? GraphOutputFile = null,
         bool SplitNamesByWords = false,
         bool DoValidation = true,
-        bool MermaidOnly = false);
+        bool MermaidOnly = false,
+        string StartNode = "Star",
+        string EndNode = "End");
 
 public class GraphBuilder : IWorkerInterceptor
 {
@@ -213,14 +215,16 @@ public class GraphBuilder : IWorkerInterceptor
                     while (Runtime.DecisionsPlans.Any())
                         try
                         {
-                            Runtime.CurrentGraphPath
-                                   .Clear()
-                                   .AddStep("Start");
+                            Runtime.CurrentGraphPath.Clear();
+
+                            if (Runtime.ClientRequest.StartNode.IsNotEmpty())
+                                Runtime.CurrentGraphPath.AddStep(Runtime.ClientRequest.StartNode);
 
                             // executing the original WF where the activities will be mocked
                             await base.ExecuteWorkflowAsync(input);
 
-                            Runtime.CurrentGraphPath.AddStep("End");
+                            if (Runtime.ClientRequest.EndNode.IsNotEmpty())
+                                Runtime.CurrentGraphPath.AddStep(Runtime.ClientRequest.EndNode);
 
                             generator.Scenarios.AddPath(Runtime.CurrentGraphPath);
                         }
@@ -232,21 +236,17 @@ public class GraphBuilder : IWorkerInterceptor
 
                     generator.PrittyfyNodes();
 
-                    var graphs = generator.ToPaths();
-                    var mermaid = generator.ToMermaidSyntax();
-                    var validationResult = generator.ValidateGraphAgainst(workflowAssembly);
-
                     var result = new StringBuilder();
 
                     if (!Runtime.ClientRequest.MermaidOnly)
-                        result.AppendLine(graphs)
+                        result.AppendLine(generator.ToPaths())
                               .AppendLine("--------");
 
-                    result.AppendLine(mermaid);
+                    result.AppendLine(generator.ToMermaidSyntax());
 
                     if (Runtime.ClientRequest.DoValidation)
                         result.AppendLine("--------")
-                              .AppendLine(validationResult);
+                              .AppendLine(generator.ValidateGraphAgainst(workflowAssembly));
 
                     if (Runtime.ClientRequest.GraphOutputFile.IsNotEmpty())
                     {

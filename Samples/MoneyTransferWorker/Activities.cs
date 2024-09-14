@@ -75,9 +75,9 @@ public class BankingActivities
     }
 
     [Activity]
-    public static async Task<string> CurrencyConvertAsync(PaymentDetails details)
+    public static async Task<string> ConvertCurrencyAsync(PaymentDetails details)
     {
-        Console.WriteLine($">> {nameof(CurrencyConvertAsync)}");
+        Console.WriteLine($">> {nameof(ConvertCurrencyAsync)}");
         await Task.Delay(2000);
 
         var bankService = new BankingService("bank1.example.com");
@@ -109,6 +109,24 @@ public class BankingActivities
         catch (Exception ex)
         {
             throw new ApplicationFailureException("CurrencyConvertAsync failed", ex);
+        }
+    }
+
+    [Activity]
+    public static async Task<string> NotifyPoliceAsync(PaymentDetails details)
+    {
+        Console.WriteLine($">> {nameof(NotifyPoliceAsync)}");
+        await Task.Delay(2000);
+
+        var bankService = new BankingService("bank1.example.com");
+        try
+        {
+            var referenceId = await bankService.NotifyPoliceAsync(details.Amount, details.ReferenceId);
+            return referenceId;
+        }
+        catch (Exception ex)
+        {
+            throw new ApplicationFailureException("NotifyPoliceAsync failed", ex);
         }
     }
 
