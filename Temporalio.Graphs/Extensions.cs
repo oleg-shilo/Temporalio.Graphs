@@ -9,14 +9,29 @@ using System.Text;
 
 namespace Temporalio.Graphs;
 
+/// <summary>
+/// 
+/// </summary>
 public static class TemporalExtensions
 {
+    /// <summary>
+    /// Adds all instance activities from a type.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="options">The options.</param>
+    /// <returns></returns>
     public static TemporalWorkerOptions AddAllActivities<T>(this TemporalWorkerOptions options) where T : new()
     {
         options.AddAllActivities(new T());
         return options;
     }
 
+    /// <summary>
+    /// Adds the static activities from a type.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="options">The options.</param>
+    /// <returns></returns>
     public static TemporalWorkerOptions AddStaticActivitiesFrom<T>(this TemporalWorkerOptions options)
     {
         var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -36,6 +51,15 @@ public static class TemporalExtensions
         return options;
     }
 
+    /// <summary>
+    /// Executes the worker in memory.
+    /// <p>It uses `WorkflowEnvironment.StartLocalAsync()` to start a local test server with full Temporal capabilities but no time skipping. </p>
+    /// </summary>
+    /// <typeparam name="TWorkflow">The type of the workflow.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <param name="workerOptions">The worker options.</param>
+    /// <param name="workflowRunCall">The workflow run call.</param>
+    /// <param name="rethrow">if set to <c>true</c> [rethrow].</param>
     public async static Task ExecuteWorkerInMemory<TWorkflow, TResult>(this TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall, bool rethrow = false)
     {
         await using var env = await WorkflowEnvironment.StartLocalAsync();
@@ -58,8 +82,17 @@ public static class TemporalExtensions
     }
 }
 
+/// <summary>
+/// 
+/// </summary>
 public static class GenericExtensions
 {
+    /// <summary>
+    /// Trims the end of the string.
+    /// </summary>
+    /// <param name="text">The text.</param>
+    /// <param name="trimText">The trim text.</param>
+    /// <returns></returns>
     public static string TrimEnd(this string text, params string[] trimText)
     {
         var result = text;
@@ -132,26 +165,70 @@ public static class GenericExtensions
         return words.Select(x => x.Trim()).JoinBy(" ").Trim().Capitalise();
     }
 
-    public static T CastTo<T>(this object obj) => (T)obj;
-
+    /// <summary>
+    /// Joins the items by the specified separator.
+    /// </summary>
+    /// <param name="items">The items.</param>
+    /// <param name="separator">The separator.</param>
+    /// <returns></returns>
     public static string JoinBy(this IEnumerable<string> items, string separator)
         => string.Join(separator, items);
 
+    /// <summary>
+    /// Determines whether the specified items is empty.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="items">The items.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified items is empty; otherwise, <c>false</c>.
+    /// </returns>
     public static bool IsEmpty<T>(this IEnumerable<T> items)
         => items == null ? true : items.Count() == 0;
 
+    /// <summary>
+    /// Determines whether the specified items is not empty.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="items">The items.</param>
+    /// <returns>
+    ///   <c>true</c> if [is not empty] [the specified items]; otherwise, <c>false</c>.
+    /// </returns>
     public static bool IsNotEmpty<T>(this IEnumerable<T> items)
         => items?.Any() == true;
 
+    /// <summary>
+    /// Adds graph path to the collection of scenarios (paths).
+    /// </summary>
+    /// <param name="scenarios">The scenarios.</param>
+    /// <param name="path">The path.</param>
     public static void AddPath(this List<List<string>> scenarios, GraphPath path)
         => scenarios.Add(path.Elements.ToList());
 
+    /// <summary>
+    /// Gets the full name of the member.
+    /// </summary>
+    /// <param name="info">The information.</param>
+    /// <returns></returns>
     public static string FullName(this MemberInfo info)
         => $"{info.DeclaringType.FullName}.{info.Name}";
 
+    /// <summary>
+    /// Gets the attributes.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="info">The information.</param>
+    /// <param name="inherit">if set to <c>true</c> [inherit].</param>
+    /// <returns></returns>
     public static T[] GetAttributes<T>(this MemberInfo info, bool inherit = true)
         => info.GetCustomAttributes(typeof(T), inherit).Cast<T>().ToArray();
 
+    /// <summary>
+    /// Gets the field value via reflection.
+    /// </summary>
+    /// <param name="obj">The object.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="flag">The flag.</param>
+    /// <returns></returns>
     public static dynamic GetFieldValue(this object obj, string value, BindingFlags flag = BindingFlags.Default)
     {
         return obj
@@ -161,6 +238,13 @@ public static class GenericExtensions
           .GetValue(obj);
     }
 
+    /// <summary>
+    /// Gets the property value via reflection.
+    /// </summary>
+    /// <param name="obj">The object.</param>
+    /// <param name="value">The value.</param>
+    /// <param name="flag">The flag.</param>
+    /// <returns></returns>
     public static dynamic GetPropValue(this object obj, string value, BindingFlags flag = BindingFlags.Default)
     {
         return obj
