@@ -7,19 +7,36 @@ using System.Reflection;
 
 namespace Temporalio.Graphs;
 
+
 public class GraphPath
 {
+    /// <summary>
+    /// The elements (steps/nodes) of te path.
+    /// </summary>
     public List<string> Elements = new();
+    /// <summary>
+    /// Clears all steps/nodes of the path.
+    /// </summary>
+    /// <returns></returns>
     public GraphPath Clear()
     {
         Elements.Clear();
         return this;
     }
+    /// <summary>
+    /// Adds the step/node to the graph.
+    /// </summary>
+    /// <param name="name">The step name.</param>
+    /// <returns></returns>
     public string AddStep(string name = "")
     {
         Elements.Add(name);
         return $"DAG step: {name}"; // will be used as a WF runtime log entry
     }
+
+    /// <summary>
+    /// Adds a decision node to the graph.
+    /// </summary>
     public string AddDecision(string id, bool value, [CallerMemberName] string name = "", string resultText = "yes|no")
     {
         var resultValues = resultText.Split("|");
@@ -32,11 +49,14 @@ public class GraphPath
 
 public class GraphGenerator
 {
-    public List<List<string>> Scenarios = new();
+    internal List<List<string>> Scenarios = new();
 
+    /// <summary>
+    /// Improves readability of the nodes by replacing string hash based IDs with a simplified numeric ID.
+    /// Numeric ID is just indexes of the nodes in the graph.
+    /// </summary>
     public void PrittyfyNodes()
     {
-        // remove string hash based IDs with a simplified numeric ID that are just indexes of the nodes in the graph
         var idMap = Scenarios
             .SelectMany(path => path.Select(node => node))
             .Where(x => x.Contains("{"))
@@ -60,12 +80,20 @@ public class GraphGenerator
         }
     }
 
+    /// <summary>
+    /// Converts <see cref="GraphGenerator.Scenarios"/> into a collection of individual paths, where path is a sequence of the '>' separated step names.
+    /// </summary>
+    /// <returns></returns>
     public string ToPaths()
         => Scenarios
         .Select(x => x.Select(x => x.ToSimpleNodeName().SplitByWords())
                       .JoinBy(" > "))
         .JoinBy(NewLine);
 
+    /// <summary>
+    /// Converts <see cref="GraphGenerator.Scenarios"/> into Mermaid syntax for flowchart. Each line of Mermaid definition is a single pair of two node transition.
+    /// </summary>
+    /// <returns></returns>
     public string ToMermaidSyntax()
     {
         if (Scenarios.IsEmpty())
@@ -118,6 +146,11 @@ public class GraphGenerator
         }
     }
 
+    /// <summary>
+    /// Converts <see cref="GraphGenerator.Scenarios"/> into Mermaid syntax for flowchart. 
+    /// The Mermaid definition is a expressed in the compact form (minimal number of lines).
+    /// </summary>
+    /// <returns></returns>
     public string ToMermaidCompactSyntax()
     {
         if (Scenarios.IsEmpty())
@@ -206,11 +239,18 @@ public class GraphGenerator
         }
     }
 }
-public static class DagValidator
+static class DagValidator
 {
-    public static string ValidateGraphAgainst(this GraphGenerator dag, Assembly assembly)
+    /// <summary>
+    /// Validates the graph against activities defined in teh assembly. Warns if some activities found in the assembly are not 
+    /// present in the graph.
+    /// </summary>
+    /// <param name="graph">The workflow graph generator instance with the all workflow paths.</param>
+    /// <param name="assembly">The assembly.</param>
+    /// <returns></returns>
+    public static string ValidateGraphAgainst(this GraphGenerator graph, Assembly assembly)
     {
-        var allGraphElements = dag.Scenarios.SelectMany(x => x).Distinct().ToArray();
+        var allGraphElements = graph.Scenarios.SelectMany(x => x).Distinct().ToArray();
 
         var allAassemblyTypes = assembly.GetTypes();
 
