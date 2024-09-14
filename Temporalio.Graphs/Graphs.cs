@@ -242,7 +242,7 @@ public class GraphGenerator
 static class DagValidator
 {
     /// <summary>
-    /// Validates the graph against activities defined in teh assembly. Warns if some activities found in the assembly are not 
+    /// Validates the graph against activities defined in the assembly. Warns if some activities found in the assembly are not 
     /// present in the graph.
     /// </summary>
     /// <param name="graph">The workflow graph generator instance with the all workflow paths.</param>

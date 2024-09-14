@@ -31,37 +31,104 @@ public record GraphBuilingContext(
 
 public class GraphBuilder : IWorkerInterceptor
 {
+    /// <summary>
+    /// Gets or sets the delegate for stopping workflow worker (e.g. at the end of the graph generation).
+    /// </summary>
+    /// <value>
+    /// The stop workflow worker.
+    /// </value>
     static public Action StopWorkflowWorker { get; set; } = () => { };
 
     static internal Dictionary<string, RuntimeContext> Sessions = new();
 
-    public static bool IsBuildingGraph => GraphBuilder.GetRuntimeContext()?.IsBuildingGraph == true;
-    public static bool SplitNamesByWords => GraphBuilder.GetRuntimeContext()?.SplitNamesByWords == true;
-    static internal RuntimeContext GetRuntimeContext()
+    /// <summary>
+    /// Gets a value indicating whether this workflow instance is running in the building-graph mode.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is building graph; otherwise, <c>false</c>.
+    /// </value>
+    public static bool IsBuildingGraph => GraphBuilder.Runtime?.IsBuildingGraph == true;
+
+    /// <summary>
+    /// Gets a value indicating whether this workflow instance whould build the graph with the node's names being split by words for better readability of the graph.
+    /// <p>IE activity `notifyCustomerByEmail` would appear in the graph as `Notify Customer By Email`.</p>
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if [split names by words]; otherwise, <c>false</c>.
+    /// </value>
+    public static bool SplitNamesByWords => GraphBuilder.Runtime?.SplitNamesByWords == true;
+
+    /// <summary>
+    /// Gets the runtime context that is specific for a workflow run from which it is called.
+    /// </summary>
+    /// <value>
+    /// The runtime context.
+    /// </value>
+    static internal RuntimeContext Runtime
     {
-        string runId;
+        get
+        {
+            string runId;
 
-        if (ActivityExecutionContext.HasCurrent)
-            runId = ActivityExecutionContext.Current.Info.WorkflowRunId;
-        else if (Workflow.InWorkflow)
-            runId = Workflow.Info.RunId;
-        else
-            return null;
+            if (ActivityExecutionContext.HasCurrent)
+                runId = ActivityExecutionContext.Current.Info.WorkflowRunId;
+            else if (Workflow.InWorkflow)
+                runId = Workflow.Info.RunId;
+            else
+                return null;
 
-        return Sessions.ContainsKey(runId) ? Sessions[runId] : null;
+            return Sessions.ContainsKey(runId) ? Sessions[runId] : null;
+        }
     }
 
-    public GraphBuilingContext Context { get; set; }
+    /// <summary>
+    /// Gets or sets the client request.
+    /// </summary>
+    /// <value>
+    /// The client request.
+    /// </value>
+    public GraphBuilingContext ClientRequest { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GraphBuilder"/> class.
+    /// </summary>
+    /// <param name="stopWorker">The stop worker.</param>
     public GraphBuilder(Action stopWorker)
     {
         StopWorkflowWorker = stopWorker;
     }
-    public WorkflowInboundInterceptor InterceptWorkflow(WorkflowInboundInterceptor nextInterceptor) => new WorkflowInbound(nextInterceptor, this.Context);
+
+    /// <summary>
+    /// Create a workflow inbound interceptor to intercept calls.
+    /// </summary>
+    /// <param name="nextInterceptor">The next interceptor in the chain to call.</param>
+    /// <returns>
+    /// Created interceptor.
+    /// </returns>
+    public WorkflowInboundInterceptor InterceptWorkflow(WorkflowInboundInterceptor nextInterceptor) => new WorkflowInbound(nextInterceptor, this.ClientRequest);
+
+    /// <summary>
+    /// Create an activity inbound interceptor to intercept calls.
+    /// </summary>
+    /// <param name="nextInterceptor">The next interceptor in the chain to call.</param>
+    /// <returns>
+    /// Created interceptor.
+    /// </returns>
     public ActivityInboundInterceptor InterceptActivity(ActivityInboundInterceptor nextInterceptor) => new ActivityInbound(nextInterceptor);
 
+    /// <summary>
+    /// Intercept activity execution.
+    /// </summary>
+    /// <param name="input">Input details of the call.</param>
+    /// <returns>Completed activity result.</returns>
     class ActivityInbound : ActivityInboundInterceptor
     {
+        /// <summary>
+        /// Gets the runtime context that is specific for a workflow run from which it is called.
+        /// </summary>
+        /// <value>
+        /// The runtime context.
+        /// </value>
         RuntimeContext Runtime
         {
             get
@@ -73,6 +140,10 @@ public class GraphBuilder : IWorkerInterceptor
                 return Sessions[runId];
             }
         }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ActivityInbound"/> class.
+        /// </summary>
+        /// <param name="next">Next interceptor in the chain.</param>
         public ActivityInbound(ActivityInboundInterceptor next) : base(next) { }
 
         public override async Task<object?> ExecuteActivityAsync(ExecuteActivityInput input)
@@ -164,6 +235,12 @@ public class GraphBuilder : IWorkerInterceptor
     }
     class WorkflowInbound : WorkflowInboundInterceptor
     {
+        /// <summary>
+        /// Gets the runtime context that is specific for a workflow run from which it is called.
+        /// </summary>
+        /// <value>
+        /// The runtime context.
+        /// </value>
         RuntimeContext Runtime
         {
             get
@@ -177,11 +254,22 @@ public class GraphBuilder : IWorkerInterceptor
         }
 
         GraphBuilingContext context;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WorkflowInbound"/> class.
+        /// </summary>
+        /// <param name="next">The next.</param>
+        /// <param name="context">The context.</param>
         public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuilingContext context) : base(next)
         {
             this.context = context;
         }
 
+
+        /// <summary>
+        /// Intercept workflow execution.
+        /// </summary>
+        /// <param name="input">Input details of the call.</param>
+        /// <returns>Completed workflow result.</returns>
         public override async Task<object?> ExecuteWorkflowAsync(ExecuteWorkflowInput input)
         {
             try

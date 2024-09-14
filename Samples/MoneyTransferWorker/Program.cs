@@ -38,7 +38,7 @@ bool isBuildingGraph = args.Contains("-graph");
 
 if (isBuildingGraph)
 {
-    interceptor.Context = new Temporalio.Graphs.GraphBuilingContext(
+    interceptor.ClientRequest = new Temporalio.Graphs.GraphBuilingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
         // GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
