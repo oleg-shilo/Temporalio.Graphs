@@ -2,6 +2,7 @@
 // This file is designated to run the workflow
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Client;
+using System.Diagnostics;
 
 // Connect to the Temporal server
 var client = await TemporalClient.ConnectAsync(new("localhost:7233") { Namespace = "default" });
@@ -11,7 +12,7 @@ var details = new PaymentDetails(
     SourceAccount: "85-150",
     TargetAccount: "43-812",
     Amount: 400,
-    Currency: "AUD",
+    Currency: "USD",
     ReferenceId: "12345"
 );
 

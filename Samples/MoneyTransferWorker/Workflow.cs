@@ -23,7 +23,9 @@ public class MoneyTransferWorkflow
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);
 
-        bool needToConvert = await WF.Decision(() => BankingActivities.NeedToConvert(details));
+        //bool needToConvert = await WF.Decision(() => BankingActivities.NeedToConvert(details));
+
+        bool needToConvert = await (details?.Currency != "AUD").ToDecision();
 
         if (needToConvert)
         {
@@ -31,7 +33,9 @@ public class MoneyTransferWorkflow
                 () => BankingActivities.ConvertCurrencyAsync(details), options);
         }
 
-        bool isTFN_Known = await WF.Decision(() => BankingActivities.IsTFN_Known(details));
+        //bool isTFN_Known = await WF.Decision(() => BankingActivities.IsTFN_Known(details));
+        bool isTFN_Known = await (details?.TargetAccount?.StartsWith("AU_") == true)
+                                                         .ToDecision("Is TFN Known");
         if (isTFN_Known)
         {
             await ExecuteActivityAsync(

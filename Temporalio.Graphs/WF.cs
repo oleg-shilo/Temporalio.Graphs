@@ -14,8 +14,8 @@ namespace Temporalio.Graphs;
 public static class WF
 {
     /// <summary>
-    /// This method is the renamed equivalent of <see cref="Workflow.ExecuteActivityAsync"/>, which allows more 
-    /// expressive invoking of the dedicated decision activities in the workflow definition.
+    /// This method is the renamed equivalent of a specific <see cref="Workflow.ExecuteActivityAsync"/> case that return bool action result, 
+    /// which allows more expressive invoking of the dedicated decision activities in the workflow definition.
     /// <p>Note, this method is used for dedicated decision activities (returning <c>bool</c> result), but not 
     /// dynamic decision activities.</p>
     /// <code>
@@ -50,13 +50,8 @@ public static class WF
     /// <param name="options">Activity options. If not specified then the option with <see cref="ActivityOptions.StartToCloseTimeout" /> 5 minutes will be used.</param>
     /// <returns>Task for completion with result.</returns>
     public static Task<bool> ToDecision(this bool result, [CallerArgumentExpression("result")] string decisionName = "", ActivityOptions options = null)
-    {
-        if (!GraphBuilder.IsBuildingGraph)
-            return Task.FromResult(result); // Normal execution
-        else
-            return Workflow.ExecuteActivityAsync( // add step with the dcisionName to the graph definition
-                (GenericActivities b) => b.MakeDecision(result, decisionName, "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
-    }
+        => Workflow.ExecuteActivityAsync( // add step with the dcisionName to the graph definition
+               (GenericActivities b) => b.MakeDecision(result, decisionName, decisionName.ToDecisionId(), "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
 
     /// <summary>
     /// Converts a boolean returning expression into a dynamically generated <see cref="Activity"/> and executes it 
@@ -84,7 +79,7 @@ public static class WF
             if (!GraphBuilder.IsBuildingGraph)
                 throw;
         }
-        return Workflow.ExecuteActivityAsync((GenericActivities b) => b.MakeDecision(result, activityName, "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+        return Workflow.ExecuteActivityAsync((GenericActivities b) => b.MakeDecision(result, activityName, activityName.ToDecisionId(), "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
     }
 
     /// <summary>
@@ -105,13 +100,13 @@ public static class WF
     {
         if (!GraphBuilder.IsBuildingGraph)
         {
-            return Workflow.WaitConditionAsync(conditionCheck, TimeSpan.FromDays(1), cancellationToken);
+            return Workflow.WaitConditionAsync(conditionCheck, timeout, cancellationToken);
         }
         else
         {
             // add step with the conditionName to the graph definition
             bool dummy = false;
-            return Workflow.ExecuteActivityAsync((GenericActivities b) => b.MakeDecision(dummy, conditionName + ":&sgnl;", "Signaled|Timeout"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
+            return Workflow.ExecuteActivityAsync((GenericActivities b) => b.MakeDecision(dummy, conditionName + ":&sgnl;", conditionName.ToDecisionId(), "Signaled|Timeout"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
         }
     }
 }

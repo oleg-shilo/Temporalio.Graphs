@@ -25,6 +25,7 @@ public record GraphBuilingContext(
         string? GraphOutputFile = null,
         bool SplitNamesByWords = false,
         bool DoValidation = true,
+        bool PreserveDecisionId = true,
         bool MermaidOnly = false,
         string StartNode = "Star",
         string EndNode = "End");
@@ -154,7 +155,7 @@ public class GraphBuilder : IWorkerInterceptor
                 {
                     var activityMethod = input.Activity.GetActivityMethod();
                     var activityName = activityMethod.FullName();
-                    (var decisionName, var resultText) = input.GetGenericActivityName();
+                    (var decisionName, var decisionId, var resultText) = input.GetGenericActivityName();
 
                     var nodeName = "";
 
@@ -172,8 +173,9 @@ public class GraphBuilder : IWorkerInterceptor
 
                             // add the new decision permutations to the current plan and to a new clone of the current plan 
                             // one decision - two permutations 
-                            currentPlan.Add((decisionName, decisionName.GetHashCode()), true);
-                            cloneOfCurrentPlan.Add((decisionName, decisionName.GetHashCode()), false);
+
+                            currentPlan.Add((decisionName, decisionId), true);
+                            cloneOfCurrentPlan.Add((decisionName, decisionId), false);
 
                             Runtime.DecisionsPlans.Add(cloneOfCurrentPlan);
                         }
@@ -186,12 +188,8 @@ public class GraphBuilder : IWorkerInterceptor
 
                     if (decision != null)
                     {
-                        var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
-
                         // mocked decision activity
                         Runtime.CurrentGraphPath.AddDecision(decision.Id, decision.Result, decision.Name, resultText);
-
-                        // return decision.Result ? decisionInfo.PositiveValue : decisionInfo.NegativeValue;
                         return decision.Result;
                     }
                     else
@@ -321,8 +319,8 @@ public class GraphBuilder : IWorkerInterceptor
                             Runtime.DecisionsPlans.RemoveAt(0);
                         }
 
-
-                    generator.PrittyfyNodes();
+                    if (!Runtime.ClientRequest.PreserveDecisionId)
+                        generator.PrittyfyNodes();
 
                     var result = new StringBuilder();
 

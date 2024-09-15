@@ -43,15 +43,15 @@ public class GenericActivities
     /// <returns></returns>
     [Activity]
     [Decision]
-    public bool MakeDecision(bool result, string name, string resultText)
+    public bool MakeDecision(bool decisionResult, string decisionName, int decisionId, string resultText)
     {
-        return result;
+        return decisionResult;
     }
 }
 
 static class GenericActivitiesExtension
 {
-    public static (string name, string resultText) GetGenericActivityName(this ExecuteActivityInput input)
+    public static (string name, int id, string resultText) GetGenericActivityName(this ExecuteActivityInput input)
     {
         var activityMethod = input.Activity.GetActivityMethod();
         var activityName = activityMethod.FullName();
@@ -60,20 +60,22 @@ static class GenericActivitiesExtension
             activityMethod.Name == nameof(GenericActivities.MakeDecision))
         {
             // args will always have 3 args
-            // activityMethod: bool MakeDecision(bool result, string name, string resultText)
+            // activityMethod: bool MakeDecision(bool result, string name, string id, string resultText)
 
             // IE: name "new StepResult().IsPdf"
             var decisionName = input.Args[1].ToString().Split('.').Last();
             decisionName = decisionName.Split("=>").Last().Trim();
+            var decisionId = (int)input.Args[2];
 
 
-            return (decisionName, input.Args[2]?.ToString() ?? "");
+            return (decisionName, decisionId, input.Args[3]?.ToString() ?? "");
         }
 
         var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
         if (decisionInfo != null)
         {
-            return (activityName, $"{decisionInfo.PositiveResultName}|{decisionInfo.NegativeResultName}");
+            // dor dedicated the id is irrelevant as the name is unique anyway 
+            return (activityName, -1, $"{decisionInfo.PositiveResultName}|{decisionInfo.NegativeResultName}");
         }
 
         return default;

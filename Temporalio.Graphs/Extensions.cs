@@ -268,6 +268,23 @@ static class GraphsExtensions
         return name.Replace(longName, shortName);
     }
 
+    //public static int ToDecisionId(this string name)
+    //    => name.GetHashCode();
+
+    // calculates string crc
+    public static int ToDecisionId(this string name)
+    {
+        var hash = 0;
+        if (name.Length == 0)
+            return hash;
+        for (int i = 0; i < name.Length; i++)
+        {
+            hash = ((hash << 5) - hash) + name[i];
+            hash &= hash;
+        }
+        return hash;
+    }
+
     public static string DecorateSignals(this string name)
     {
         if (name.Contains(":&sgnl;"))
