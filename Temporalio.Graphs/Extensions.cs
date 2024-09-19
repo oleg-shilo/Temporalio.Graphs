@@ -6,6 +6,7 @@ using Temporalio.Testing;
 using Temporalio.Worker;
 using Temporalio.Client;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Temporalio.Graphs;
 
@@ -107,7 +108,7 @@ public static class GenericExtensions
         if (!GraphBuilder.SplitNamesByWords)
             return text;
 
-        var rawText = text.Replace("_", " ");
+        var rawText = text.Replace("_", " ").Replace("\"", "'");
 
         if (rawText.Contains("{"))
         {
@@ -154,10 +155,15 @@ public static class GenericExtensions
         var word = new StringBuilder();
         for (int i = 0; i < text.Length; i++)
         {
-            if (i > 0 && char.IsUpper(text[i]) && !char.IsUpper(text[i - 1]))
+            if (i > 0)
             {
-                words.Add(word.ToString());
-                word.Clear();
+                var prevChar = text[i - 1];
+                var currChar = text[i];
+                if (currChar.IsUpper() && !prevChar.IsUpper() && currChar != '\'' && currChar != '"' && currChar != '`')
+                {
+                    words.Add(word.ToString());
+                    word.Clear();
+                }
             }
             word.Append(text[i]);
         }
@@ -184,6 +190,15 @@ public static class GenericExtensions
     /// </returns>
     public static bool IsEmpty<T>(this IEnumerable<T> items)
         => items == null ? true : items.Count() == 0;
+
+    /// <summary>
+    /// Determines whether the specified character is upper.
+    /// </summary>
+    /// <param name="char">The character.</param>
+    /// <returns>
+    ///   <c>true</c> if the specified character is upper; otherwise, <c>false</c>.
+    /// </returns>
+    public static bool IsUpper(this char @char) => char.IsUpper(@char);
 
     /// <summary>
     /// Determines whether the specified items is not empty.

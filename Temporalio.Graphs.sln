@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransferClient", "Samp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransferWorker", "Samples\MoneyTransferWorker\MoneyTransferWorker.csproj", "{6D424673-7CCE-4CBF-8423-96827565DC52}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TemporalRestGateway", "TemporalRestGateway\TemporalRestGateway.csproj", "{748F3B1E-6144-4158-8254-352450480397}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{6D424673-7CCE-4CBF-8423-96827565DC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D424673-7CCE-4CBF-8423-96827565DC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D424673-7CCE-4CBF-8423-96827565DC52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{748F3B1E-6144-4158-8254-352450480397}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{748F3B1E-6144-4158-8254-352450480397}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{748F3B1E-6144-4158-8254-352450480397}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{748F3B1E-6144-4158-8254-352450480397}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +48,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A245AB04-C7F0-4795-8BEC-118E4556151B} = {8BAA470D-5668-4E60-BD0C-098B8DDEA681}
 		{6D424673-7CCE-4CBF-8423-96827565DC52} = {8BAA470D-5668-4E60-BD0C-098B8DDEA681}
+		{748F3B1E-6144-4158-8254-352450480397} = {8BAA470D-5668-4E60-BD0C-098B8DDEA681}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7F5F718-547F-479B-BB8F-E285CB0CD929}

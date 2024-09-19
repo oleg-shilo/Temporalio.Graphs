@@ -2,8 +2,8 @@
   "profiles": {
     "MoneyTransferWorker": {
       "commandName": "Project",
-      "commandLineArgs1": "-graph",
-      "commandLineArgs": ""
+      "commandLineArgs": "-graph",
+      "commandLineArgs1": ""
     }
   }
 }

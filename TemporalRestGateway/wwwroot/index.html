@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        table,
+        th,
+        td {
+            text-align: left;
+            border-collapse: collapse;
+            padding-left: 20px;
+        }
+
+        tr {
+            border-bottom: 1px solid lightslategray;
+        }
+    </style>
+    <script>
+        var wfId = "";
+        var runId = "";
+
+        function retreiveWfInfo() {
+            fetch('/api/workflows')
+                .then(response => response.json()) // Parse JSON response
+                .then(data => {
+                    // Display data in the result div
+                    if (data?.length > 0) {
+                        wfId = data[0].execution.workflow_id.toString();
+                        runId = data[0].execution.run_id.toString();
+                    }
+
+                    let wfInfo = `
+                    <p> <b>WorkflowId:</b> ${wfId}<br>
+                        <b>RunId:</b> ${runId}</p>
+                        `;
+                    document.getElementById('result').innerHTML = wfInfo;
+
+                    retrieveWfEvents();
+                })
+                .catch(error => {
+                    // Handle errors
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        function retrieveWfEvents() {
+            fetch(`/api/workflows/${wfId}/runs/${runId}`)
+                .then(response => response.json()) // Parse JSON response
+                .then(data => {
+                    // console.log(data);
+                    let eventsInfo = `<h3>WF events:</h3>
+                    <table >
+                        <tr>
+                            <th>Event</th>
+                            <th>Activity</th>
+                            <th>Name</th>
+                            <th>Details</th>
+                            </tr>`;
+
+                    for (let index = 0; index < data.events.length; index++) {
+                        const event = data.events[index];
+                        // CLI vs grpc constants
+                        if (event.eventType == "ActivityTaskScheduled" || event.eventType == "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
+                            console.log(event.activityTaskScheduledEventAttributes.input);
+                            let attr = event.activityTaskScheduledEventAttributes;
+
+                            let activityContext = "";
+                            let payloads = attr.input.payloads;
+                            if (attr.input.payloads.length > 3) {
+
+                                let id = atob(payloads[2].data);
+                                let decodedName = atob(payloads[1].data);
+                                decodedName = decodeURIComponent(JSON.parse(decodedName));
+                                activityContext = `Name: '${decodedName}'; &nbsp;&nbsp;&nbsp;Id: ${id}`;
+                            }
+
+                            eventsInfo += `
+                                    <tr>      
+                                        <td> ${event.eventId} </td>
+                                        <td> ${attr.activityId}</td> 
+                                        <td> ${attr.activityType.name} </td>
+                                        <td> ${activityContext} </td>
+                                        </tr>`;
+                        }
+                    }
+                    eventsInfo += `</table>`;
+
+                    document.getElementById('history').innerHTML = eventsInfo;
+
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(retreiveWfInfo, 200);
+        });
+    </script>
+</head>
+
+<body>
+    <h3>Latest WF run</h3>
+    <div id="result" onclick=""></div>
+    <button onclick="retrieveWfEvents()">Refresh</button>
+    <hr>
+    <div id="history"></div>
+    <p>
+        <b>CLI:</b><br> temporal workflow show -w pay-invoice-aaabe356-759c-4a8e-9214-488f5e774ead -r
+        b1220178-61d9-4e90-a05e-428b2e6a0e7c -o json<br>
+        temporal workflow list --namespace default --query "ExecutionStatus='Completed' OR ExecutionStatus='Running'" -o
+        json
+    </p>
+    </p>
+</body>
+
+</html>

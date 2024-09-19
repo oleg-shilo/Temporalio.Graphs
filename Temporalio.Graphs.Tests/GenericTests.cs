@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Temporalio.Activities;
 
 namespace Temporalio.Graphs.Tests;
@@ -15,6 +16,14 @@ public class GenericTests
     static Expression<Func<Task<string>>> GetExpression(Expression<Func<Task<string>>> activityCall)
     {
         return activityCall;
+    }
+
+    [Fact]
+    public void Workflow_Events()
+    {
+        var embedCode = "ImRldGFpbHM/LkN1cnJlbmN5ICE9IFx1MDAyMkFVRFx1MDAyMiI=";
+        byte[] decodedBytes = Convert.FromBase64String(embedCode);
+        string decodedText = Encoding.UTF8.GetString(decodedBytes);
     }
 
     [Fact]

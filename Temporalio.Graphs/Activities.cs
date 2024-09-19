@@ -67,7 +67,6 @@ static class GenericActivitiesExtension
             decisionName = decisionName.Split("=>").Last().Trim();
             var decisionId = (int)input.Args[2];
 
-
             return (decisionName, decisionId, input.Args[3]?.ToString() ?? "");
         }
 
