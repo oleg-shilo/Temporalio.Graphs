@@ -62,10 +62,15 @@ public class MoneyTransferWorkflow
             depositError = ex.Message;
         }
 
-        // need to retrieve the decision value so it can be recorded during the graph generation
+        // simulate a long running check
+        BankingActivities.CheckWithInterpol(ref interpolCheck);
 
+        // need to retrieve the decision value so it can be recorded during the graph generation
         var isIllegal = await WF.WaitConditionAsync(
-               () => interpolCheck,
+               () =>
+               {
+                   return interpolCheck;
+               },
                TimeSpan.FromMicroseconds(BankingActivities.averageActivityDuration)
            );
 

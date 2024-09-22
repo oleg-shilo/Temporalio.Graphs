@@ -8,7 +8,7 @@ using Temporalio.Exceptions;
 
 public class BankingActivities
 {
-    public static int averageActivityDuration = 2000;
+    public static int averageActivityDuration = 4000;
 
     [Activity]
     public async Task<string> WithdrawAsync(PaymentDetails details)
@@ -112,6 +112,13 @@ public class BankingActivities
         {
             throw new ApplicationFailureException("CurrencyConvertAsync failed", ex);
         }
+    }
+
+    internal static Random random = new(Environment.TickCount);
+
+    public static void CheckWithInterpol(ref bool result)
+    {
+        result = random.Next(0, 2) == 1;
     }
 
     [Activity]

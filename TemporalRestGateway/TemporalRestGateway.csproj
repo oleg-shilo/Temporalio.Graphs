@@ -16,4 +16,8 @@
     <Compile Remove="web.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="TemporalRestGateway.http" />
+  </ItemGroup>
+
 </Project>
