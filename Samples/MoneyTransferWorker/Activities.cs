@@ -8,12 +8,14 @@ using Temporalio.Exceptions;
 
 public class BankingActivities
 {
+    public static int averageActivityDuration = 2000;
+
     [Activity]
     public async Task<string> WithdrawAsync(PaymentDetails details)
     {
         //Console.WriteLine($"Withdrawing ${details.Amount} from account {details.SourceAccount}.");
         Console.WriteLine($">> {nameof(WithdrawAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
 
@@ -34,7 +36,7 @@ public class BankingActivities
     {
         //Console.WriteLine($"Depositing ${details.Amount} into account {details.TargetAccount}.");
         Console.WriteLine($">> {nameof(DepositAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank2.example.com");
 
@@ -60,7 +62,7 @@ public class BankingActivities
     {
         //Console.WriteLine($"Refunding ${details.Amount} to account {details.SourceAccount}.");
         Console.WriteLine($">> {nameof(RefundAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
 
@@ -78,7 +80,7 @@ public class BankingActivities
     public static async Task<string> ConvertCurrencyAsync(PaymentDetails details)
     {
         Console.WriteLine($">> {nameof(ConvertCurrencyAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
 
@@ -98,7 +100,7 @@ public class BankingActivities
     {
         //Console.WriteLine($"CurrencyConvertAsync ${details.Amount} to account {details.SourceAccount}.");
         Console.WriteLine($">> {nameof(NotifyAtoAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
         try
@@ -116,7 +118,7 @@ public class BankingActivities
     public static async Task<string> NotifyPoliceAsync(PaymentDetails details)
     {
         Console.WriteLine($">> {nameof(NotifyPoliceAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
         try
@@ -135,7 +137,7 @@ public class BankingActivities
     public static bool NeedToConvert(PaymentDetails details)
     {
         Console.WriteLine($">> {nameof(NeedToConvert)}?");
-        Task.Delay(2000).Wait();
+        Task.Delay(averageActivityDuration).Wait();
         return (details.Currency != "AUD");
     }
 
@@ -144,7 +146,7 @@ public class BankingActivities
     public static bool IsTFN_Known(PaymentDetails details)
     {
         Console.WriteLine($">> {nameof(IsTFN_Known)}?");
-        Task.Delay(2000).Wait();
+        Task.Delay(averageActivityDuration).Wait();
         return true;
     }
 
@@ -152,7 +154,7 @@ public class BankingActivities
     public static async Task<string> TakeNonResidentTaxAsync(PaymentDetails details)
     {
         Console.WriteLine($">> {nameof(TakeNonResidentTaxAsync)}");
-        await Task.Delay(2000);
+        await Task.Delay(averageActivityDuration);
 
         var bankService = new BankingService("bank1.example.com");
 

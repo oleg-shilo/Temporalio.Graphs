@@ -7,6 +7,7 @@
         th,
         td {
             text-align: left;
+            vertical-align: top;
             border-collapse: collapse;
             padding-left: 20px;
         }
@@ -14,10 +15,55 @@
         tr {
             border-bottom: 1px solid lightslategray;
         }
+
+        .queue {
+            border-bottom: 0px;
+        }
+
+        select option {
+            width: 150px;
+            min-width: 150px;
+        }
+
+        button {
+            width: 150px;
+        }
+
+        .dropdowns option:checked {
+            background: transparent;
+            color: black;
+        }
     </style>
     <script>
         var wfId = "";
         var runId = "";
+        var pollingDelay = 1000;
+        var waiting = false;
+        var executions = [];
+
+        function updateQueues() {
+            fetch('/api/workflows')
+                .then(response => response.json()) // Parse JSON response
+                .then(data => {
+                    // Display data in the result div
+                    if (data?.length > 0) {
+                        wfId = data[0].execution.workflow_id.toString();
+                        runId = data[0].execution.run_id.toString();
+                    }
+
+                    let wfInfo = `
+                    <p> <b>WorkflowId:</b> ${wfId}<br>
+                        <b>RunId:</b> ${runId}</p>
+                        `;
+                    document.getElementById('result').innerHTML = wfInfo;
+
+                    retrieveWfEvents();
+                })
+                .catch(error => {
+                    // Handle errors
+                    console.error('Error fetching data:', error);
+                });
+        }
 
         function retreiveWfInfo() {
             fetch('/api/workflows')
@@ -43,9 +89,66 @@
                 });
         }
 
+        function getStatus() {
+            fetch(`/api/status`)
+                .then(response => response.json())
+                .then(data => {
+                    // console.log(data);
+
+                    let serverStatus = (data?.serverAvailable !== true) ? (waiting ? "waiting..." : "not running") : "running";
+                    let workerStatus = (data?.workerAvailable !== true) ? "not running" : "running";
+
+                    if (data?.serverAvailable !== true)
+                        waiting = false;
+
+                    document.getElementById('serverStatus').innerHTML = `${serverStatus}`;
+                    document.getElementById('workerStatus').innerHTML = `${workerStatus}`;
+
+                    executions = data?.executions;
+                    let pending = "";
+                    let inprogress = "";
+                    let processed = "";
+
+                    for (let i = 0; i < executions.length; i++) {
+                        let e = executions[i];
+                        let id = e.workflow_id.length > 17 ? e.workflow_id.substring(0, 17) + "..." : e.workflow_id;
+                        if (e.completion_status === 'pending')
+                            pending += `<option>${id}</option>`;
+                        else if (e.completion_status === 'inprogress')
+                            inprogress += `<option>${id}</option>`;
+                        else if (e.completion_status === 'processed')
+                            processed += `<option>${id}</option>`;
+                    }
+
+                    document.getElementById('pendingQueue').innerHTML = (pending === "" ? "<option>&nbsp</option>" : pending);
+                    document.getElementById('inprogressQueue').innerHTML = (inprogress === "" ? "<option>&nbsp</option>" : inprogress);
+                    document.getElementById('processedQueue').innerHTML = (processed === "" ? "<option>&nbsp</option>" : processed);
+
+                    setTimeout(getStatus, pollingDelay);
+                });
+        }
+
+        function startServer() {
+            fetch(`/api/start-server`);
+            waiting = true;
+            document.getElementById('serverStatus').innerHTML = `waiting...`;
+        }
+
+        function startWorkflow() {
+            fetch(`/api/start-wf`);
+        }
+
+        function startWorker() {
+            fetch(`/api/start-worker`);
+        }
+
+        function stopWorker() {
+            fetch(`/api/stop-worker`);
+        }
+
         function retrieveWfEvents() {
             fetch(`/api/workflows/${wfId}/runs/${runId}`)
-                .then(response => response.json()) // Parse JSON response
+                .then(response => response.json())
                 .then(data => {
                     // console.log(data);
                     let eventsInfo = `<h3>WF events:</h3>
@@ -94,24 +197,78 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(retreiveWfInfo, 200);
+            setTimeout(getStatus, 200);
         });
     </script>
 </head>
 
 <body>
-    <h3>Latest WF run</h3>
-    <div id="result" onclick=""></div>
-    <button onclick="retrieveWfEvents()">Refresh</button>
-    <hr>
-    <div id="history"></div>
-    <p>
-        <b>CLI:</b><br> temporal workflow show -w pay-invoice-aaabe356-759c-4a8e-9214-488f5e774ead -r
-        b1220178-61d9-4e90-a05e-428b2e6a0e7c -o json<br>
-        temporal workflow list --namespace default --query "ExecutionStatus='Completed' OR ExecutionStatus='Running'" -o
-        json
-    </p>
-    </p>
+    <div>
+        <table>
+            <tr class="queue">
+                <td>Pending Workflows </td>
+                <td>In-progress Workflows </td>
+                <td>Completed Workflows </td>
+                <td> <a href="http://localhost:8233/namespaces/default/workflows">Temporal Dashboard</a></td>
+                <td> </td>
+            </tr>
+            <tr class="queue">
+                <td>
+                    <div class="dropdowns">
+                        <select id="pendingQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="dropdowns">
+                        <select id="inprogressQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="dropdowns">
+                        <select id="processedQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <br><button onclick="startServer()">Start Server</button><br><br>
+                    <button onclick="startWorker()">Start Worker</button><br><br>
+                    <button onclick="stopWorker()">Stop Worker</button><br><br>
+                    <button onclick="startWorkflow()">Start Workflow</button><br>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <td> <b>Server:</b> </td>
+                            <td> <span id="serverStatus">...</span> </td>
+                        </tr>
+
+                        <tr>
+                            <td> <b>Worker:</b> </td>
+                            <td> <span id="workerStatus">...</span> </td>
+                        </tr>
+                    </table>
+                </td>
+        </table>
+        </tr>
+
+        <h3>Selected WF </h3>
+        <div id="result" onclick=""></div>
+        <button onclick="retrieveWfEvents()">Refresh</button>
+        <hr>
+        <div id="history"></div>
+        <p>
+            <b>CLI Samples:</b><br> temporal workflow show -w pay-invoice-aaabe356-759c-4a8e-9214-488f5e774ead -r
+            b1220178-61d9-4e90-a05e-428b2e6a0e7c -o json<br>
+            temporal workflow list --namespace default --query "ExecutionStatus='Completed' OR
+            ExecutionStatus='Running'" -o
+            json
+        </p>
+        </p>
 </body>
 
 </html>

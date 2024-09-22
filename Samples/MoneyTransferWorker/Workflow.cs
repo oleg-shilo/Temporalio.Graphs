@@ -60,14 +60,13 @@ public class MoneyTransferWorkflow
         catch (ApplicationFailureException ex)
         {
             depositError = ex.Message;
-            //Decisions.ActiveProfile.DepositFailed = true;
         }
 
         // need to retrieve the decision value so it can be recorded during the graph generation
 
         var isIllegal = await WF.WaitConditionAsync(
                () => interpolCheck,
-               TimeSpan.FromSeconds(2)
+               TimeSpan.FromMicroseconds(BankingActivities.averageActivityDuration)
            );
 
         if (isIllegal)
