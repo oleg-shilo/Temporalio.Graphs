@@ -63,8 +63,13 @@ static class GenericActivitiesExtension
             // activityMethod: bool MakeDecision(bool result, string name, string id, string resultText)
 
             // IE: name "new StepResult().IsPdf"
+            //     return interpolCheck;               :&sgnl;
             var decisionName = input.Args[1].ToString().Split('.').Last();
-            decisionName = decisionName.Split("=>").Last().Trim();
+            decisionName = decisionName.Split("=>").Last()
+                .Replace("\n", "").Replace("\r", "")
+                .Replace("{", "").Replace("}", "")
+                .Replace("  ", "").Replace(" :", ":")
+                .Trim();
             var decisionId = (int)input.Args[2];
 
             return (decisionName, decisionId, input.Args[3]?.ToString() ?? "");

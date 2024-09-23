@@ -1,7 +1,9 @@
+using Google.Protobuf.Compiler;
 using Microsoft.Extensions.FileProviders;
 using System;
 using System.Diagnostics;
 using System.Text.Json;
+//using Temporalio.Api.Common.V1;
 using Temporalio.Api.Enums.V1;
 using Temporalio.Api.TaskQueue.V1;
 using Temporalio.Api.WorkflowService.V1;
@@ -9,7 +11,7 @@ using Temporalio.Client;
 using Temporalio.Workflows;
 
 //================================================================================
-class Api
+static class Api
 {
     public static async Task<string> grpc_GetWorkflows()
     {
@@ -42,6 +44,19 @@ class Api
             var json = item.ToJson(); // first page; good for now
             return json;
         }
+
+        //var resultPage = await history.Take(1).FirstOrDefaultAsync();
+
+        //object input = null;
+
+        //var payloads = resultPage?.Events.FirstOrDefault(x => x.EventType == EventType.WorkflowExecutionStarted)?.WorkflowExecutionStartedEventAttributes?.Input;
+
+        //foreach (var payload in payloads.Payloads_)
+        //{
+        //    //string jsonString = payload.Data.ToStringUtf8();
+        //    input = payload.Data;
+        //    break;
+        //}
 
         return "{events:[]}";
     }
@@ -89,10 +104,9 @@ class Api
 
                 if (execution.Status == WorkflowExecutionStatus.Running)
                 {
-                    completionStatus = "pending";
                     var history = client.ListWorkflowHistoriesAsync($"WorkflowId='{execution.Id}' AND RunId='{execution.RunId}'");
                     var resultPage = await history.Take(1).FirstOrDefaultAsync();
-
+                    completionStatus = "pending";
                     if (resultPage?.Events.Any(x => x.EventType == EventType.WorkflowTaskStarted) == true)
                         completionStatus = "inprogress";
                 }

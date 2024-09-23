@@ -71,7 +71,8 @@ public class MoneyTransferWorkflow
                {
                    return interpolCheck;
                },
-               TimeSpan.FromMicroseconds(BankingActivities.averageActivityDuration)
+               TimeSpan.FromMicroseconds(BankingActivities.averageActivityDuration),
+               conditionName: "Interpol Check"
            );
 
         if (isIllegal)
