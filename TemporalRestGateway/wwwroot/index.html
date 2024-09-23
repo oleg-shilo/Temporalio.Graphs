@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Temporalio.Graphs</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <head>
     <style>
@@ -35,13 +38,65 @@
 
         }
     </style>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script> -->
+    <script>
+        // mermaid.initialize({
+        //     startOnLoad: true,
+        //     flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'cardinal' },
+        //     securityLevel: 'loose'
+        // });
+
+        // eleM = document.querySelector('.mermaid');
+        // eleE = document.querySelector('#err');
+
+        // setTimeout(mermaidDraw, 200);
+
+        // async function mermaidDraw() {
+        //     try {
+        //         graphDefinition = getMermaidDefinition();
+        //         const {
+        //             svg
+        //         } = await mermaid.render('graphDiv', graphDefinition);
+        //         eleM.innerHTML = svg;
+
+        //         // setTimeout(addClickHandlers, 200);
+
+        //     } catch (err) {
+        //         if (err instanceof ReferenceError) {
+        //             varname = err.message.split(' ')[0];
+        //             window[varname] = varname;
+        //             // setTimeout(mermaidDraw, 0);
+        //         }
+        //         console.error(err);
+        //         eleE.insertAdjacentHTML('beforeend', `🚫${err.message}\n`);
+        //     }
+        // };
+
+        // function getMermaidDefinition() {
+
+        //     text = document.querySelector('textarea').value;
+        //     if (!text.match(/^[a-zA-Z]/)) {
+        //         // markdown ```mermaid, remove first and last line
+        //         text = text.split('\n').slice(1, -1).join('\n');
+        //     }
+        //     text = text.replace(/"`.*?`"/g, function (match) {
+        //         return eval(match.slice(1, -1));
+        //     });
+        //     text = text.replace(/"\{.*?\}"/g, function (match) {
+        //         return eval(match.slice(1, -1));
+        //     });
+
+        //     text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;
+
+        //     return text;
+        // }
+    </script>
     <script>
         var wfId = "";
         var runId = "";
         var pollingDelay = 1000;
         var waiting = false;
         var executions = [];
-
 
         function retrieveWfInfo() {
             fetch('/api/workflows')
@@ -136,7 +191,7 @@
             if (execution) {
                 wfId = execution.workflow_id;
                 runId = execution.run_id;
-                console.log(">" + wfId);
+
                 let wfInfo = `
                     <p> <b>WorkflowId:</b> ${wfId}<br>
                         <b>RunId:</b> ${runId}</p>
@@ -147,6 +202,10 @@
         }
 
         function retrieveWfEvents() {
+            if (wfId === "") {
+                return;
+            }
+
             console.log("<" + wfId);
             fetch(`/api/workflows/${wfId}/runs/${runId}`)
                 .then(response => response.json())
@@ -161,11 +220,21 @@
                         <th>Details</th>
                     </tr>`;
 
-                    for (let index = 0; index < data.events.length; index++) {
+                    for (let index = 0; data.events && index < data.events.length; index++) {
                         const event = data.events[index];
-                        // CLI vs grpc constants
+
+                        if (index === 0
+                            && (event.eventType == "WorkflowExecutionStarted" || event.eventType == "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED")) {
+                            let attr = event.workflowExecutionStartedEventAttributes;
+                            if (attr.input.payloads.length > 0) {
+                                var inputData = decodeURIComponent(atob(attr.input.payloads[0].data));
+                                document.getElementById('wfInput').innerHTML = inputData;
+                            }
+                        }
+
+                        // CLI vs grpc; the constants are encoded somewhat differently
                         if (event.eventType == "ActivityTaskScheduled" || event.eventType == "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED") {
-                            // console.log(event.activityTaskScheduledEventAttributes.input);
+
                             let attr = event.activityTaskScheduledEventAttributes;
 
                             let activityContext = "";
@@ -200,7 +269,10 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             setTimeout(getStatus, 200);
+            setTimeout(startServer, 200);
         });
+
+
     </script>
 </head>
 
@@ -263,19 +335,41 @@
         </tr>
 
         <h3>Selected WF </h3>
-        <div id="result" onclick=""></div>
-        <button onclick="retrieveWfEvents()">Refresh</button>
+        <div id="result"></div>
+        <div> <b>Input: </b>
+            <pre><span id="wfInput"></span> </pre>
+        </div>
         <hr>
+        <div class="mermaid"></div>
+        <pre id="err"></pre>
         <h3>WF events:</h3>
         <div id="history"></div>
-        <p>
+        <!-- <p>
             <b>CLI Samples:</b><br> temporal workflow show -w pay-invoice-aaabe356-759c-4a8e-9214-488f5e774ead -r
             b1220178-61d9-4e90-a05e-428b2e6a0e7c -o json<br>
             temporal workflow list --namespace default --query "ExecutionStatus='Completed' OR
             ExecutionStatus='Running'" -o
             json
-        </p>
-        </p>
+        </p> -->
+
+        <textarea hidden rows="8" cols="100">
+```mermaid
+flowchart LR
+s((In)) --> Withdraw
+Withdraw --> -1485020306{Currency != ' AUD'}
+-1485020306{Currency != ' AUD'} -- yes --> ConvertCurrency[Convert Currency]
+ConvertCurrency[Convert Currency] --> 78577353{Is TFN Known}
+78577353{Is TFN Known} -- yes --> NotifyAto[Notify Ato]
+NotifyAto[Notify Ato] --> Deposit
+Deposit --> 1546202137{{Interpol Check}}
+1546202137{{Interpol Check}} -- Signaled --> Refund
+Refund --> NotifyPolice[Notify Police]
+NotifyPolice[Notify Police] --> e((Out))
+78577353{Is TFN Known} -- no --> TakeNonResidentTax[Take Non Resident Tax]
+TakeNonResidentTax[Take Non Resident Tax] --> Deposit
+-1485020306{Currency != ' AUD'} -- no --> 78577353{Is TFN Known}
+1546202137{{Interpol Check}} -- Timeout --> e((Out))
+```</textarea>
 </body>
 
 </html>
