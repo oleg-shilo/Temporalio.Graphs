@@ -10,9 +10,13 @@ function retrieveWfInfo() {
         .then(response => response.json()) // Parse JSON response
         .then(data => {
 
+            let dashboardUrl = `(<a href="http://localhost:8233/namespaces/default/workflows/${wfId}/${runId}/history" target="_blank">dashboard</a>)`;
+            if (wfId === "" || runId === "") {
+                dashboardUrl = "";
+            }
             let wfInfo = `
-                <p> <b>WorkflowId:</b> ${wfId}<br>
-                    <b>RunId:</b> ${runId}</p>
+                <p> <b>WorkflowId:</b> ${wfId} ${dashboardUrl}<br>
+                <b>RunId:</b> ${runId}</p>
                     `;
             document.getElementById('result').innerHTML = wfInfo;
 
@@ -123,6 +127,7 @@ function retrieveWfEvents() {
                     <th>Activity</th>
                     <th>Name</th>
                     <th>Started</th>
+                    <th>Completed</th>
                     <th>Details</th>
                 </tr>`;
 
@@ -153,14 +158,39 @@ function retrieveWfEvents() {
                         activityContext = `Name: '${decodedName}'; &nbsp;&nbsp;&nbsp;Id: ${id}`;
                     }
 
+                    let startDate = new Date(event.eventTime).toLocaleString();
+                    let endDate = "";
+
+                    let startedActivity = data.events.find(e =>
+                        e.eventType == "EVENT_TYPE_ACTIVITY_TASK_STARTED" &&
+                        e.activityTaskStartedEventAttributes?.scheduledEventId === event.eventId);
+
+                    if (startedActivity)
+                        startDate = new Date(startedActivity.eventTime).toLocaleString();
+
+                    let endActivity = data.events.find(e =>
+                        e.eventType == "EVENT_TYPE_ACTIVITY_TASK_COMPLETED" &&
+                        e.activityTaskCompletedEventAttributes?.scheduledEventId === event.eventId);
+
+                    // console.log(relatedActivities);
+                    if (endActivity) {
+                        console.log(endActivity);
+
+                        endDate = new Date(endActivity.eventTime).toLocaleString();
+                    }
+
                     eventsInfo += `
                                 <tr>      
                                     <td> ${event.eventId} </td>
                                     <td> ${attr.activityId}</td> 
                                     <td> ${attr.activityType.name} </td>
-                                    <td> ${new Date(event.eventTime).toLocaleString()} </td>
+                                    <td> ${startDate} </td>
+                                    <td> ${endDate} </td>
                                     <td> ${activityContext} </td>
                                     </tr>`;
+
+
+
                 }
             }
             eventsInfo += `</table>`;

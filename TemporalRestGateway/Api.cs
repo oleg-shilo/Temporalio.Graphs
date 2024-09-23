@@ -77,7 +77,7 @@ static class Api
             TargetAccount = "43-812",
             Amount = (int)(random.NextSingle() * 100) + 10,
             Currency = random.NextSingle() > 0.5 ? "USD" : "AUD",
-            ReferenceId = "12345"
+            ReferenceId = (random.NextSingle() + 340).ToString(),
         };
 
         await client.StartWorkflowAsync(workflowType, new[] { input }, new(id: workflowId, taskQueue: "MONEY_TRANSFER_TASK_QUEUE"));
