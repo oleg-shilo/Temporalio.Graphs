@@ -34,8 +34,8 @@ async function getMermaidDefinition() {
     let text = `
 flowchart LR
 s((In)) --> Withdraw
-Withdraw --> -1485020306{Currency != ' AUD'}
--1485020306{Currency != ' AUD'} -- yes --> ConvertCurrency[Convert Currency]
+Withdraw --> -1485020306{Currency != 'AUD'}
+-1485020306{Currency != 'AUD'} -- yes --> ConvertCurrency[Convert Currency]
 ConvertCurrency[Convert Currency] --> 78577353{Is TFN Known}
 78577353{Is TFN Known} -- yes --> NotifyAto[Notify Ato]
 NotifyAto[Notify Ato] --> Deposit
@@ -45,27 +45,28 @@ Refund --> NotifyPolice[Notify Police]
 NotifyPolice[Notify Police] --> e((Out))
 78577353{Is TFN Known} -- no --> TakeNonResidentTax[Take Non Resident Tax]
 TakeNonResidentTax[Take Non Resident Tax] --> Deposit
--1485020306{Currency != ' AUD'} -- no --> 78577353{Is TFN Known}
+-1485020306{Currency != 'AUD'} -- no --> 78577353{Is TFN Known}
 1546202137{{Interpol Check}} -- Timeout --> e((Out))
 `;
-    let allNodes = text
-        .split(/\r?\n/)
-        .flatMap(x => x.split("-->"))
-        .map(x => x.split(" -- ")[0]
-            .split("[")[0]
-            .split("(")[0]
-            .trim())
-        .map(x => {
-            if (x.includes("{{"))
-                return x.split("{{")[0] + ":WaitCondition";
-            else if (x.includes("{"))
-                return x.split("{")[0] + ":MakeDecision";
-            else
-                return x;
-        })
-        .filter(x => !x.includes("flowchart") && x.length > 0);
-    allNodes = Array.from(new Set(allNodes));
-    console.log(allNodes);
+    // use this to check all mermaid node ids
+    // let allNodes = text
+    //     .split(/\r?\n/)
+    //     .flatMap(x => x.split("-->"))
+    //     .map(x => x.split(" -- ")[0]
+    //         .split("[")[0]
+    //         .split("(")[0]
+    //         .trim())
+    //     .map(x => {
+    //         if (x.includes("{{"))
+    //             return x.split("{{")[0] + ":WaitCondition";
+    //         else if (x.includes("{"))
+    //             return x.split("{")[0] + ":MakeDecision";
+    //         else
+    //             return x;
+    //     })
+    //     .filter(x => !x.includes("flowchart") && x.length > 0);
+    // allNodes = Array.from(new Set(allNodes));
+    // console.log(allNodes);
     text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;
     return text;
 }
@@ -88,25 +89,35 @@ function setNodeUniqueClass(node, className) {
     });
 }
 
-function nextStep() {
+function setMermaidSelectedStep(name) {
+    if (name === null || name === undefined || name === "") {
+        name = "<unknown step>"; // use any string to ensure mismatch with any mermaid node
+        document.querySelector('#stepInfo').innerHTML = "";
+    }
     const nodes = document.querySelectorAll('g.node');
+    nodes.forEach(nd => {
+        if (nd.id.includes(name))
+            nd.classList.add('selectedStep');
 
-    let found = false;
-    for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].matches('.activeStep')) {
-            nodes[i].classList.remove("activeStep");
+        else
+            nd.classList.remove('selectedStep');
+    });
+}
 
-            if (i + 1 >= nodes.length)
-                nodes[0].classList.add("activeStep");
-            else
-                nodes[++i].classList.add("activeStep");
+function setMermaidActiveStep(name) {
 
-            found = true;
-        }
+    if (name === null || name === undefined || name === "") {
+        name = "<unknown step>"; // use any string to ensure mismatch with any mermaid node
     }
 
-    if (!found)
-        nodes[0].classList.add("activeStep");
+    const nodes = document.querySelectorAll('g.node');
+
+    for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id.includes(name))
+            nodes[i].classList.add("activeStep");
+        else
+            nodes[i].classList.remove("activeStep");
+    }
 }
 
 function isStarted(node) {
@@ -188,3 +199,6 @@ function generateRandomUUID() {
             return v.toString(16);
         });
 }
+
+window.setMermaidActiveStep = setMermaidActiveStep;
+window.setMermaidSelectedStep = setMermaidSelectedStep;

@@ -68,18 +68,30 @@
         </table>
         </tr>
 
-        <h3>Selected WF </h3>
-        <div id="result"></div>
-        <div>
-            <b>Input: </b>
-            <pre><span id="wfInput"></span> </pre>
-        </div>
+        <table>
+            <tr class="queue">
+                <td style="min-width: 200px;">
+                    <h3>Selected WF </h3>
+                    <div id="result"></div>
+                    <div>
+                        <b>Input: </b>
+                        <pre><span id="wfInput"></span> </pre>
+                    </div>
+                </td>
+                <td>
+                    <h3>Selected Step </h3>
+                    <div id="stepInfo"></div>
+                </td>
+            </tr>
+        </table>
         <hr>
         <div class="mermaid"></div>
         <pre id="err"></pre>
         <hr>
         <h3>WF events:</h3>
         <div id="history"></div>
+
+        <!-- <button onclick="window.setMermaidActiveStep('Deposit')">Test</button> -->
 
         <!-- it has to be loaded after the markup -->
         <script src="mermaid.js"></script>

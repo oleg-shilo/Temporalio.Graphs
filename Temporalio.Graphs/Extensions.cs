@@ -108,7 +108,7 @@ public static class GenericExtensions
         if (!GraphBuilder.SplitNamesByWords)
             return text;
 
-        var rawText = text.Replace("_", " ").Replace("\"", "'");
+        var rawText = text.Replace("_", " ").Replace("\"", "'"); // " interferes with Mermaid dsyntax
 
         if (rawText.Contains("{"))
         {
@@ -153,13 +153,16 @@ public static class GenericExtensions
     {
         var words = new List<string>();
         var word = new StringBuilder();
+        //bool isPunctuationChar(char c)=> char.IsPunctuation(c) || char.IsSymbol(c);
+
         for (int i = 0; i < text.Length; i++)
         {
             if (i > 0)
             {
                 var prevChar = text[i - 1];
                 var currChar = text[i];
-                if (currChar.IsUpper() && !prevChar.IsUpper() && currChar != '\'' && currChar != '"' && currChar != '`')
+                if (currChar.IsUpper() && !prevChar.IsUpper()
+                    && !char.IsPunctuation(prevChar) && !char.IsPunctuation(currChar))
                 {
                     words.Add(word.ToString());
                     word.Clear();

@@ -20,7 +20,7 @@ function retrieveWfInfo() {
                     `;
             document.getElementById('result').innerHTML = wfInfo;
 
-            retrieveWfEvents();
+            getWfEvents();
         })
         .catch(error => {
             // Handle errors
@@ -108,11 +108,12 @@ function selectWorkflow(arg) {
                     <b>RunId:</b> ${runId}</p>
                     `;
         document.getElementById('result').innerHTML = wfInfo;
+        window.setMermaidSelectedStep(""); // unselect
         retrieveWfInfo();
     }
 }
 
-function retrieveWfEvents() {
+function getWfEvents() {
     if (wfId === "") {
         return;
     }
@@ -131,6 +132,7 @@ function retrieveWfEvents() {
                     <th>Details</th>
                 </tr>`;
 
+            let activeStepID = "";
             for (let index = 0; data.events && index < data.events.length; index++) {
                 const event = data.events[index];
 
@@ -174,27 +176,32 @@ function retrieveWfEvents() {
 
                     // console.log(relatedActivities);
                     if (endActivity) {
-                        console.log(endActivity);
+                        // console.log(endActivity);
 
                         endDate = new Date(endActivity.eventTime).toLocaleString();
                     }
 
+                    if (startDate.length > 0 && endDate.length === 0) {
+                        activeStepID = attr.activityType.name;
+                        // console.log("---" + activeStepID);
+                    }
+
                     eventsInfo += `
-                                <tr>      
-                                    <td> ${event.eventId} </td>
-                                    <td> ${attr.activityId}</td> 
-                                    <td> ${attr.activityType.name} </td>
-                                    <td> ${startDate} </td>
-                                    <td> ${endDate} </td>
-                                    <td> ${activityContext} </td>
-                                    </tr>`;
-
-
+                    <tr>      
+                    <td> ${event.eventId} </td>
+                    <td> ${attr.activityId}</td> 
+                    <td> ${attr.activityType.name} </td>
+                    <td> ${startDate} </td>
+                    <td> ${endDate} </td>
+                    <td> ${activityContext} </td>
+                    </tr>`;
 
                 }
             }
+
             eventsInfo += `</table>`;
 
+            window.setMermaidActiveStep(activeStepID);
             document.getElementById('history').innerHTML = eventsInfo;
 
         })
