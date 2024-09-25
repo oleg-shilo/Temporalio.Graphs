@@ -6,6 +6,7 @@ mermaid.initialize({
 
 eleM = document.querySelector('.mermaid');
 eleE = document.querySelector('#err');
+allNodes = [];
 
 setTimeout(mermaidDraw, 200);
 
@@ -49,24 +50,26 @@ TakeNonResidentTax[Take Non Resident Tax] --> Deposit
 1546202137{{Interpol Check}} -- Timeout --> e((Out))
 `;
     // use this to check all mermaid node ids
-    // let allNodes = text
-    //     .split(/\r?\n/)
-    //     .flatMap(x => x.split("-->"))
-    //     .map(x => x.split(" -- ")[0]
-    //         .split("[")[0]
-    //         .split("(")[0]
-    //         .trim())
-    //     .map(x => {
-    //         if (x.includes("{{"))
-    //             return x.split("{{")[0] + ":WaitCondition";
-    //         else if (x.includes("{"))
-    //             return x.split("{")[0] + ":MakeDecision";
-    //         else
-    //             return x;
-    //     })
-    //     .filter(x => !x.includes("flowchart") && x.length > 0);
-    // allNodes = Array.from(new Set(allNodes));
-    // console.log(allNodes);
+    allNodes = text
+        .split(/\r?\n/)
+        .flatMap(x => x.split("-->"))
+        .map(x => x.split(" -- ")[0]
+            .split("[")[0]
+            .split("(")[0]
+            .trim())
+        .map(x => {
+            if (x.includes("{{"))
+                return x.split("{{")[0] + ":WaitCondition";
+            else if (x.includes("{"))
+                return x.split("{")[0] + ":MakeDecision";
+            else
+                return x;
+        })
+        .filter(x => !x.includes("flowchart") && x.length > 0);
+    allNodes = Array.from(new Set(allNodes));
+    console.log(allNodes);
+
+
     text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;
     return text;
 }
@@ -104,9 +107,12 @@ function setMermaidActiveStep(name) {
     }
 
     const nodes = document.querySelectorAll('g.node');
+    const nodeArray = [...nodes];
+
+    let activeNode = nodeArray.find(nd => nd.id.includes(`-${name}-`));
 
     for (let i = 0; i < nodes.length; i++) {
-        if (nodes[i].id.includes(name))
+        if (nodes[i] === activeNode)
             nodes[i].classList.add("activeStep");
         else
             nodes[i].classList.remove("activeStep");
@@ -139,7 +145,7 @@ function isStarted(node) {
 
 function handleDiagramNodeClick(node, parentDataId) {
     setNodeUniqueClass(node, "selectedStep");
-    window.setSelectedStepInfo(parentDataId, node.textContent);
+    window.setSelectedStepInfo(parentDataId, node.textContent, allNodes);
 }
 
 
@@ -153,7 +159,6 @@ function addClickHandlers() {
         node.addEventListener('click', (event) => {
             const clickedNode = event.target.closest('g'); // Get the closest <g> element (the node)
             clickedNode.setAttribute("cursor", "hand");
-            const nodeId = clickedNode.id;
             const parentNode = clickedNode.parentElement;
             let parentDataId = parentNode.getAttribute('data-id') || node.id || 'No data-id attribute';
 

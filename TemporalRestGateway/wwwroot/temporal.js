@@ -161,7 +161,6 @@ function getWfEvents() {
                         let decodedName = atob(payloads[1].data);
                         decodedName = decodeURIComponent(JSON.parse(decodedName));
                         activityContext = decodedName;
-                        // activityContext = `Name: '${decodedName}'; &nbsp;&nbsp;&nbsp;Id: ${id}`;
                     }
 
                     let startDate = new Date(event.eventTime).toLocaleString();
@@ -184,7 +183,6 @@ function getWfEvents() {
 
                     if (startDate.length > 0 && endDate.length === 0) {
                         activeStepID = attr.activityType.name;
-                        // console.log("---" + activeStepID);
                     }
 
                     eventsInfo += `
@@ -202,6 +200,10 @@ function getWfEvents() {
 
             eventsInfo += `</table>`;
 
+            let execution = executions.find(e => e.workflow_id === wfId);
+            if (execution?.completion_status === "processed")
+                activeStepID = "e"; // end node
+
             window.setMermaidActiveStep(activeStepID);
             document.getElementById('history').innerHTML = eventsInfo;
 
@@ -211,10 +213,10 @@ function getWfEvents() {
         });
 }
 
-function setSelectedStepInfo(activityId, textContent) {
+function setSelectedStepInfo(activityId, textContent, nodesInfo) {
 
     const infoTag = document.querySelector('#stepInfo');
-    let eventData = { started: "", completed: "", type: "activity", result: "..." };
+    let eventData = { started: "", completed: "not executed", type: "activity", result: "..." };
     if (wfEvents) {
         let event = wfEvents.find(e => e.activityTaskScheduledEventAttributes?.activityType.name === activityId);
         if (!event) {
@@ -245,19 +247,34 @@ function setSelectedStepInfo(activityId, textContent) {
         }
 
         if (event) {
-            let attr = event.activityTaskScheduledEventAttributes;
             eventData.started = new Date(event.eventTime).toLocaleString();
             eventData.completed = (event.activityTaskScheduledEventAttributes.workflowTaskCompletedEventId.toString() === undefined ? "In-progress" : "Competed");
         }
-
     }
-    infoTag.innerHTML =
-        `Id: '${activityId}'<br>
-         Display: ${textContent}<br>
-         Type: ${eventData.type}<br>
-         Result: ${eventData.result}<br>
-         Event Start: ${eventData.started}<br>
-         Status: ${eventData.completed}`;
+
+    let nodeDefinition = nodesInfo.find(n => n.includes(activityId));
+    if (nodeDefinition?.includes("WaitCondition"))
+        eventData.type = "wait condition"
+
+    if (eventData.type == "wait condition")
+        infoTag.innerHTML =
+            `<b>Name:</b> ${textContent}<br>
+             <b>Type:</b> ${eventData.type}<br>`;
+
+    else if (eventData.type == "decision")
+        infoTag.innerHTML =
+            `<b>Name:</b> ${textContent}<br>
+             <b>Type:</b> ${eventData.type}<br>
+             <b>Result:</b> ${eventData.result}<br>
+             <b>Event Start:</b> ${eventData.started}<br>
+             <b>Status:</b> ${eventData.completed}`;
+
+    else // normal actcivity
+        infoTag.innerHTML =
+            `<b>Name:</b> ${textContent}<br>
+             <b>Type:</b> ${eventData.type}<br>
+             <b>Event Start:</b> ${eventData.started}<br>
+             <b>Status:</b> ${eventData.completed}`;
 }
 
 // ==============================================
