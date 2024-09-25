@@ -4,6 +4,7 @@ var runId = "";
 var pollingDelay = 1000;
 var waiting = false;
 var executions = [];
+var wfEvents = [];
 
 function retrieveWfInfo() {
     fetch('/api/workflows')
@@ -109,6 +110,7 @@ function selectWorkflow(arg) {
                     `;
         document.getElementById('result').innerHTML = wfInfo;
         window.setMermaidSelectedStep(""); // unselect
+        wfEvents = [];
         retrieveWfInfo();
     }
 }
@@ -123,16 +125,17 @@ function getWfEvents() {
         .then(data => {
             // console.log(data);
             let eventsInfo = `<table>
-                <tr>
+                <tr >
                     <th>Event</th>
                     <th>Activity</th>
                     <th>Name</th>
                     <th>Started</th>
                     <th>Completed</th>
-                    <th>Details</th>
+                    <th>Context</th>
                 </tr>`;
 
             let activeStepID = "";
+            wfEvents = data.events;
             for (let index = 0; data.events && index < data.events.length; index++) {
                 const event = data.events[index];
 
@@ -157,7 +160,8 @@ function getWfEvents() {
                         let id = atob(payloads[2].data);
                         let decodedName = atob(payloads[1].data);
                         decodedName = decodeURIComponent(JSON.parse(decodedName));
-                        activityContext = `Name: '${decodedName}'; &nbsp;&nbsp;&nbsp;Id: ${id}`;
+                        activityContext = decodedName;
+                        // activityContext = `Name: '${decodedName}'; &nbsp;&nbsp;&nbsp;Id: ${id}`;
                     }
 
                     let startDate = new Date(event.eventTime).toLocaleString();
@@ -174,10 +178,7 @@ function getWfEvents() {
                         e.eventType == "EVENT_TYPE_ACTIVITY_TASK_COMPLETED" &&
                         e.activityTaskCompletedEventAttributes?.scheduledEventId === event.eventId);
 
-                    // console.log(relatedActivities);
                     if (endActivity) {
-                        // console.log(endActivity);
-
                         endDate = new Date(endActivity.eventTime).toLocaleString();
                     }
 
@@ -210,7 +211,59 @@ function getWfEvents() {
         });
 }
 
+function setSelectedStepInfo(activityId, textContent) {
+
+    const infoTag = document.querySelector('#stepInfo');
+    let eventData = { started: "", completed: "", type: "activity", result: "..." };
+    if (wfEvents) {
+        let event = wfEvents.find(e => e.activityTaskScheduledEventAttributes?.activityType.name === activityId);
+        if (!event) {
+            event = wfEvents.find(e => {
+                if (e.activityTaskScheduledEventAttributes?.activityType.name === "MakeDecision") {
+                    let decodedName = "";
+                    let result = "";
+                    let decisionId = "";
+
+                    if (e.activityTaskScheduledEventAttributes?.input?.payloads.length > 3) {
+                        result = atob(e.activityTaskScheduledEventAttributes?.input?.payloads[0].data);
+                        decodedName = atob(e.activityTaskScheduledEventAttributes?.input?.payloads[1].data);
+                        decisionId = atob(e.activityTaskScheduledEventAttributes?.input?.payloads[2].data);
+                    }
+
+                    if (decisionId == activityId) {
+                        eventData.type = "decision";
+                        eventData.result = result;
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                else
+                    return false;
+            });
+        }
+
+        if (event) {
+            let attr = event.activityTaskScheduledEventAttributes;
+            eventData.started = new Date(event.eventTime).toLocaleString();
+            eventData.completed = (event.activityTaskScheduledEventAttributes.workflowTaskCompletedEventId.toString() === undefined ? "In-progress" : "Competed");
+        }
+
+    }
+    infoTag.innerHTML =
+        `Id: '${activityId}'<br>
+         Display: ${textContent}<br>
+         Type: ${eventData.type}<br>
+         Result: ${eventData.result}<br>
+         Event Start: ${eventData.started}<br>
+         Status: ${eventData.completed}`;
+}
+
+// ==============================================
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(getStatus, 200);
     setTimeout(startServer, 200);
 });
+
+window.setSelectedStepInfo = setSelectedStepInfo;

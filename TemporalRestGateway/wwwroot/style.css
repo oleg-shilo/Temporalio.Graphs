@@ -7,7 +7,7 @@ td {
     padding-left: 20px;
 }
 
-.rowborder tr {
+tr {
     border-bottom: 1px solid lightslategray;
 }
 

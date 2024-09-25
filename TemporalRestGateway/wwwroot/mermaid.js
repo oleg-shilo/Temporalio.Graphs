@@ -71,13 +71,6 @@ TakeNonResidentTax[Take Non Resident Tax] --> Deposit
     return text;
 }
 
-function toMermaidId(nodeText) {
-    return nodeText
-        .split("[")[0]
-        .split("(")[0]
-        .split("-")[0]
-        .trim();
-}
 
 function setNodeUniqueClass(node, className) {
     const nodes = document.querySelectorAll('g.node');
@@ -144,32 +137,9 @@ function isStarted(node) {
     return false;
 }
 
-function handleClick(node, parentDataId) {
-
+function handleDiagramNodeClick(node, parentDataId) {
     setNodeUniqueClass(node, "selectedStep");
-
-    const info = document.querySelector('#stepInfo');
-    parentDataId = toMermaidId(parentDataId);
-    let status = "<pending>";
-    let runId = generateRandomUUID();
-    let start = "...";
-    let end = "...";
-    let duration = "...";
-
-    let stepDetails = isStarted(node);
-    if (stepDetails.started) {
-        status = stepDetails.finished ? "completed" : "In progress";
-
-        const now = new Date(); // Get the current date and time
-        const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-        start = tenMinutesAgo.toLocaleString();
-        if (stepDetails.finished) {
-            end = tenMinutesAgo.toLocaleString();
-            duration = "45 sec";
-        }
-    }
-    info.innerHTML = `Id: '${parentDataId}'<br>Status: ${status}<br>RunId: ${runId}<br>Started: ${start}<br>Completed: ${end}<br>Duration: ${duration}`;
-
+    window.setSelectedStepInfo(parentDataId, node.textContent);
 }
 
 
@@ -185,19 +155,16 @@ function addClickHandlers() {
             clickedNode.setAttribute("cursor", "hand");
             const nodeId = clickedNode.id;
             const parentNode = clickedNode.parentElement;
-            const parentDataId = parentNode.getAttribute('data-id') || 'No data-id attribute';
-            handleClick(node, parentDataId);
+            let parentDataId = parentNode.getAttribute('data-id') || node.id || 'No data-id attribute';
+
+            if (parentDataId.startsWith("flowchart-")) {
+                parentDataId = parentDataId.replace("flowchart-", "");
+                parentDataId = parentDataId.substring(0, parentDataId.lastIndexOf("-"));
+            }
+
+            handleDiagramNodeClick(node, parentDataId);
         });
     });
-}
-
-function generateRandomUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-        .replace(/[xy]/g, function (c) {
-            const r = Math.random() * 16 | 0;
-            const v = c === 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
 }
 
 window.setMermaidActiveStep = setMermaidActiveStep;
