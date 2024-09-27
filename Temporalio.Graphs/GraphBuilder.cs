@@ -19,6 +19,18 @@ using System;
 using System.Collections.Generic;
 
 namespace Temporalio.Graphs;
+/// <summary>
+/// 
+/// </summary>
+/// <param name="IsBuildingGraph"></param>
+/// <param name="ExitAfterBuildingGraph"></param>
+/// <param name="GraphOutputFile">File name to store the graph. </param>
+/// <param name="SplitNamesByWords"></param>
+/// <param name="DoValidation"></param>
+/// <param name="PreserveDecisionId"></param>
+/// <param name="MermaidOnly"></param>
+/// <param name="StartNode"></param>
+/// <param name="EndNode"></param>
 public record GraphBuilingContext(
         bool IsBuildingGraph,
         bool ExitAfterBuildingGraph,
@@ -27,11 +39,12 @@ public record GraphBuilingContext(
         bool DoValidation = true,
         bool PreserveDecisionId = true,
         bool MermaidOnly = false,
-        string StartNode = "Star",
+        string StartNode = "Start",
         string EndNode = "End");
 
 public class GraphBuilder : IWorkerInterceptor
 {
+
     /// <summary>
     /// Gets or sets the delegate for stopping workflow worker (e.g. at the end of the graph generation).
     /// </summary>
@@ -334,7 +347,7 @@ public class GraphBuilder : IWorkerInterceptor
                         result.AppendLine("--------")
                               .AppendLine(generator.ValidateGraphAgainst(workflowAssembly));
 
-                    if (Runtime.ClientRequest.GraphOutputFile.IsNotEmpty())
+                    if (Runtime.ClientRequest.GraphOutputFile?.IsNotEmpty() == true)
                     {
                         Console.WriteLine();
                         Console.WriteLine($"The WF graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
@@ -352,7 +365,7 @@ public class GraphBuilder : IWorkerInterceptor
                         StopWorkflowWorker();
                     }
 
-                    return "The WF graph is generated";
+                    return result.ToString().Trim();
                 }
                 else
                 {

@@ -50,7 +50,7 @@ if (isBuildingGraph)
         );
 
     await workerOptions.ExecuteWorkerInMemory(
-        (MoneyTransferWorkflow wf) => wf.RunAsync(null));
+        (MoneyTransferWorkflow wf) => wf.RunAsync(null, null));
 }
 else
 {

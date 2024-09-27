@@ -1,0 +1,31 @@
+table,
+th,
+td {
+    text-align: left;
+    vertical-align: top;
+    border-collapse: collapse;
+    padding-left: 20px;
+}
+
+tr {
+    border-bottom: 1px solid lightslategray;
+}
+
+.queue {
+    border-bottom: 0px;
+}
+
+select option {
+    width: 150px;
+    min-width: 150px;
+}
+
+button {
+    /* width: 150px; */
+}
+
+.dropdowns option:checked {
+    background: transparent;
+    color: black;
+
+}

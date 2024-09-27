@@ -108,7 +108,7 @@ public static class GenericExtensions
         if (!GraphBuilder.SplitNamesByWords)
             return text;
 
-        var rawText = text.Replace("_", " ").Replace("\"", "'"); // " interferes with Mermaid dsyntax
+        var rawText = text.Replace("_", " ").Replace("\"", "'"); // " interferes with Mermaid syntax
 
         if (rawText.Contains("{"))
         {

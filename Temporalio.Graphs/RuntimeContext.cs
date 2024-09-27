@@ -16,12 +16,23 @@ using System.Text;
 using Temporalio.Testing;
 using Temporalio.Worker;
 using System;
+using System.Text.Json;
 
 namespace Temporalio.Graphs;
 internal class RuntimeContext
 {
     public bool InitFrom(ExecuteWorkflowInput input)
-        => InitFrom(input.Args.OfType<GraphBuilingContext>().FirstOrDefault());
+    {
+        var context = input.Args.OfType<GraphBuilingContext>().FirstOrDefault();
+        if (context == null)
+            try
+            {
+                // last hope attempt. The context can be passed as a JSON string
+                context = JsonSerializer.Deserialize<GraphBuilingContext>(input.Args.LastOrDefault()?.ToString() ?? "");
+            }
+            catch (Exception ex) { }
+        return InitFrom(context);
+    }
 
     public bool InitFrom(GraphBuilingContext context)
     {

@@ -18,7 +18,7 @@ using Temporalio.Activities;
 public class MoneyTransferWorkflow
 {
     [WorkflowRun]
-    public async Task<string> RunAsync(PaymentDetails details)
+    public async Task<string> RunAsync(PaymentDetails details, object context)
     {
         string withdrawResult = await ExecuteActivityAsync(
             (BankingActivities b) => b.WithdrawAsync(details), options);

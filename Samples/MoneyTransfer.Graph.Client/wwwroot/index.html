@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="UTF-8">
+<title>Temporalio.Graphs</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.0/mermaid.min.js"></script>
+<script src="temporal.js"></script>
+
+<body>
+    <div>
+        <table>
+            <tr class="queue">
+                <td>Pending Workflows </td>
+                <td>In-progress Workflows </td>
+                <td>Completed Workflows </td>
+                <td>
+                    <a href="http://localhost:8233/namespaces/default/workflows" target="_blank">Temporal Dashboard</a>
+                </td>
+                <td> </td>
+            </tr>
+            <tr class="queue">
+                <td>
+                    <div class="dropdowns">
+                        <select id="pendingQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="dropdowns">
+                        <select id="inprogressQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <div class="dropdowns">
+                        <select id="processedQueue" size="10">
+                            <option>&nbsp;</option>
+                        </select>
+                    </div>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <td> <b>Server:</b> </td>
+                            <td> <a href="javascript:null" onclick="startServer()">Start</a></td>
+                            <td> <a href="javascript:null" onclick="stopServer()">Stop</a></td>
+                            <td> <span id="serverStatus">...</span> </td>
+                        </tr>
+
+                        <tr>
+                            <td> <b>Worker:</b> </td>
+                            <td> <a href="javascript:null" onclick="startWorker()">Start</a></td>
+                            <td> <a href="javascript:null" onclick="stopWorker()">Stop</a></td>
+                            <td> <span id="workerStatus">...</span> </td>
+                        </tr>
+                        <tr>
+                            <td> <b>Workflow:</b> </td>
+                            <td> <a href="javascript:null" onclick="startWorkflow()">Start</a></td>
+                            <td> </td>
+                            <td> </td>
+                        </tr>
+                        <tr>
+                            <td> </td>
+                            <td> <a href="javascript:null" onclick="startWorkflowGraph()">Graph</a></td>
+                            <td> </td>
+                            <td> </td>
+                        </tr>
+                    </table>
+                </td>
+        </table>
+        </tr>
+
+        <table>
+            <tr class="queue">
+                <td style="min-width: 600px;">
+                    <b><u>Selected WF </u></b><br><br>
+                    <div><b>Workflow Id:</b> <span id="wfId"></span> <span id="wfUrl"></span></div>
+                    <div><b>Status:</b> <span id="wfStatus"></span></div>
+                    <div><b>Current Step:</b> <span id="currStep"></span></div>
+                </td>
+                <td>
+                    <table style="min-width: 200px;">
+                        <tr class="queue">
+                            <td>
+                                <b>Input:</b><br>
+                                <textarea id="wfInput" readonly rows="4" cols="50"></textarea>
+                            </td>
+                        </tr>
+                        <tr class="queue">
+                            <td>
+                                <b>Result:</b> <br>
+                                <textarea id="wfResult" readonly rows="4" cols="50"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td>
+                    <b><u>Selected Step </u></b><br><br>
+                    <div id="stepInfo"></div>
+                </td>
+            </tr>
+        </table>
+        <hr>
+        <div class="mermaid"></div>
+        <pre id="err"></pre>
+        <hr>
+        <h3>WF events:</h3>
+        <div id="history"></div>
+
+        <!-- <button onclick="window.setMermaidActiveStep('Deposit')">Test</button> -->
+        <!-- it has to be loaded after the markup -->
+        <script src="mermaid.js"></script>
+</body>
+
+</html>
