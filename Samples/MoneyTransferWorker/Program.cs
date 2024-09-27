@@ -10,7 +10,7 @@ using System.Diagnostics;
 using var tokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (_, eventArgs) =>
-{
+{   
     tokenSource.Cancel();
     eventArgs.Cancel = true;
 };
@@ -36,25 +36,24 @@ workerOptions
 
 bool isBuildingGraph = args.Contains("-graph");
 
-if (isBuildingGraph)
+if (isBuildingGraph) // graph building mode
 {
     interceptor.ClientRequest = new Temporalio.Graphs.GraphBuilingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
-        // GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
-        SplitNamesByWords: true,
-        StartNode: "s((In))",
-        EndNode: "e((Out))"
-        //StartNode: "Start",
-        //EndNode: "End"
+        GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
+        SplitNamesByWords: true
+        // if you need to modify edge nodes with Mermaid node syntax
+        //StartNode: "s((In))",
+        //EndNode: "e((Out))"
         );
 
     await workerOptions.ExecuteWorkerInMemory(
         (MoneyTransferWorkflow wf) => wf.RunAsync(null, null));
 }
-else
+else // normal mode
 {
-    // Create a client to connect to localhost on "default" namespace
+    // Create a client to connect to localhost on "default" namespace 
     var client = await TemporalClient.ConnectAsync(
         new("localhost:7233")
         {

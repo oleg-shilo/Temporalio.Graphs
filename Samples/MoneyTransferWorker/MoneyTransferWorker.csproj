@@ -23,4 +23,8 @@
     <ProjectReference Include="..\..\Temporalio.Graphs\Temporalio.Graphs.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="&#xD;&#xA;if $(ConfigurationName) == Release $(ProjectDir)$(OutDir)$(TargetName).exe -graph&#xD;&#xA;" />
+  </Target>
+
 </Project>
