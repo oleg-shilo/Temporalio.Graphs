@@ -217,6 +217,7 @@ function setSelectedStepInfo(activityId, textContent, nodesInfo) {
 
     const infoTag = document.querySelector('#stepInfo');
     let eventData = { started: "", completed: "not executed", type: "activity", result: "..." };
+
     if (wfEvents) {
         let event = wfEvents.find(e => e.activityTaskScheduledEventAttributes?.activityType.name === activityId);
         if (!event) {
@@ -268,6 +269,16 @@ function setSelectedStepInfo(activityId, textContent, nodesInfo) {
              <b>Result:</b> ${eventData.result}<br>
              <b>Event Start:</b> ${eventData.started}<br>
              <b>Status:</b> ${eventData.completed}`;
+
+    else if (activityId === "s") // dedicated node with a well-known id
+        infoTag.innerHTML =
+            `<b>Name:</b> ${textContent}<br>
+             <b>Type:</b> entry point`;
+
+    else if (activityId === "e") // dedicated node with a well-known id
+        infoTag.innerHTML =
+            `<b>Name:</b> ${textContent}<br>
+             <b>Type:</b> exit point`;
 
     else // normal actcivity
         infoTag.innerHTML =
