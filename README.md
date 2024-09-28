@@ -37,30 +37,30 @@ These are the step-by-step instructions:
   using var worker = new TemporalWorker(client, workerOptions);
   ```
   
-That's it. Now your solution is compatible with WF graph generation. Your WF worker is still as normal as it was before the change. The only change is that it is now capable of building the graph of your WF if it is executed in the graph-building mode. Thus in the graph-generation mode, the WF actions are mocked at runtime and instead the graph definition with the action names as graph nodes is generated. 
+    That's it. Now your solution is compatible with WF graph generation. Your WF worker is still as normal as it was before the change. The only change is that it is now capable of building the graph of your WF if it is executed in the graph-building mode. Thus in the graph-generation mode, the WF actions are mocked at runtime and instead the graph definition with the action names as graph nodes is generated. 
 
-This is how you can switch between normal and graph-generation modes based on CLI arguments of your worker process.
+- This is how you can switch between normal and graph-generation modes based on CLI arguments of your worker process.
 
-```c#
-bool isBuildingGraph = args.Contains("-graph");
+  ```c#
+  bool isBuildingGraph = args.Contains("-graph");
 
-if (isBuildingGraph)
-{
-    interceptor.Context = new (
-        IsBuildingGraph: true,
-        ExitAfterBuildingGraph: true,
-        GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
+  if (isBuildingGraph)
+  {
+      interceptor.Context = new (
+          IsBuildingGraph: true,
+          ExitAfterBuildingGraph: true,
+          GraphOutputFile: typeof(MoneyTransferWorkflow).Assembly.Location.ChangeExtension(".graph"));
 
-    await workerOptions.ExecuteWorkerInMemory(
-        (MoneyTransferWorkflow wf) => wf.RunAsync(null));
-}
-else
-{
-    // normal execution
-    . . .
-```
+      await workerOptions.ExecuteWorkerInMemory(
+          (MoneyTransferWorkflow wf) => wf.RunAsync(null));
+  }
+  else
+  {
+      // normal execution
+      . . .
+  ```
 
-When the graph is generated its definition (see code above) is written in the `*.graph` file next to the worker assembly file.
+  When the graph is generated its definition (see code above) is written in the `*.graph` file next to the worker assembly file.
 
 Note, that you can also generate the graph when you run your worker in the normal mode. You only need to supply `Temporalio.Graphs.GraphBuilingContext` as input for your workflow when you start it. The result of such a workflow will be the graph definition. See the [samples page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Samples#moneytransfer-graph-client) for that.
 
