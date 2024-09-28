@@ -77,7 +77,7 @@ WF graph definition:
    ```
    ````
 
-As you can see _Temporalio.Graphs_ can even handle WF Decision nodes that are not natively supported by Temporal. See [Architectural Considerations page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Architectural-Considerations#decision-nodes).
+As you can see _Temporalio.Graphs_ can even handle WF Decision nodes that are not natively supported by Temporal. _Temporalio.Graphs_ can also integrate Temporal signals (WaitCondition) even though it is not naturally present ina typical WF graph. See [Architectural Considerations page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Architectural-Considerations#decision-nodes).
 
 The same WF graph definition visualization with Mermaid rendered:
 
@@ -88,7 +88,7 @@ The same WF graph definition visualization with Mermaid rendered:
    0{NeedToConvert} -- no --> 1{IsTFN_Known}
    ```  
 
-This repository contains the complete graph generation output [MoneyTransferWorkflow.grap](https://github.com/oleg-shilo/Temporalio.Graphs/blob/main/Samples/MoneyTransferWorker/MoneyTransferWorkflow.graph)that is produced by building the worker project in release mode. This is the same way you may want to integrate the generation of the static WF graph/diagram in your CI. 
+This repository contains the complete graph generation output [MoneyTransferWorkflow.grap](https://github.com/oleg-shilo/Temporalio.Graphs/blob/main/Samples/MoneyTransferWorker/MoneyTransferWorkflow.graph) that is produced by building the worker project in release mode. This is the same way you may want to integrate the generation of the static WF graph/diagram in your CI. 
 
 Note, that the complete graph generation output contains: 
 - Mermaid definition of the graph
