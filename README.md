@@ -11,7 +11,7 @@ Temporal (out of the box) only offers the WF visualization for the already execu
 This project is an attempt to fill this gap.
 
 ## Solution
-_Note: this project specifically targets .NET binding for Temporal._
+_Note: this project specifically targets .NET binding for Temporal. However, the concept used in this solution is simple to implement in any other Temporal SDK (language)._
 
 _Temporalio.Graphs_ is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when WF activities are mocked and instead of being executed the activities simply  trigger logging WF steps that become the specification of the complete WF graph.
 
