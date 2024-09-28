@@ -1,35 +1,41 @@
 ## Problem Statement
 
-When it comes to the WorkFlow (WF) engines, many of them based on the concept of [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG). 
+When it comes to the WorkFlow (WF) engines, many of them are based on the concept of [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph) (DAG). 
 
-The obvious limitation of DAG (inability to support loops) comes with the great benefit - visualizing the whole WF is easy as it is often defined up front as a DSL specification of the complete graph.
+The obvious limitation of DAG (inability to support loops) comes with a great benefit - visualizing the whole WF is easy as it is often defined up front as a DSL specification of the complete graph.
 
-Temporal belongs to the DAG-less family of WF engines. Thus, of the box, it offers somewhat limited visualization capabilities that are sacrificed for the more flexible architecture.  
+Temporal belongs to the DAG-less family of WF engines. Thus, it offers somewhat limited visualization capabilities that are sacrificed for the more flexible architecture.  
 
-Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WH regardless how far the execution progressed. The problem has been detected and even [discussed](https://community.temporal.io/t/see-workflow-as-a-dag/2010) in the Temporal community but without any significant progress in addressing it. 
+Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WH regardless of how far the execution progressed. The problem has been detected and even [discussed](https://community.temporal.io/t/see-workflow-as-a-dag/2010) in the Temporal community but without any significant progress in addressing it. 
 
-This project is an attempt to feel this gap.
+This project is an attempt to fill this gap.
 
 ## Solution
-_Note: this project specifically trargets .NET binding for Temporal._
+_Note: this project specifically targets .NET binding for Temporal._
 
-`Temporalio.Graphs` is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when all WF activities are mocked and only log the graph steps during the execution.
+`Temporalio.Graphs` is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when WF activities are mocked and instead of being executed the activities simply  trigger logging WF steps that become a specification of the WF graph..
 
-In order to achieve that you will need to add `Temporalio.Graphs` NuGet package to your worker project and then do the following steps:
+To achieve that you will need to add `Temporalio.Graphs` NuGet package to your worker project and then add a special graph-building interceptor and register the special activity defined in the `Temporalio.Graphs.GenericActivities` class.
 
-- Add `GraphBuilder` to your worker as an interceptor in the Program.cs file:
+These are the step-by-step instructions:
+
+- Add `GraphBuilder` to your worker as an interceptor and GenericActivities in the Program.cs file:
   ```c#
-   var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
-   {
-       Interceptors = [new Temporalio.Graphs.GraphBuilder()]
-   };
-   . . .
-   using var worker = new TemporalWorker(client, workerOptions);
+  var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QUEUE")
+  {
+      Interceptors = [new Temporalio.Graphs.GraphBuilder()]
+  };
+  workerOptions
+    .AddAllActivities<Temporalio.Graphs.GenericActivities>() // register graph building assistance activity 
+    .AddAllActivities(activities)           // Register your activities
+    .AddWorkflow<MoneyTransferWorkflow>();  // Register your workflow
+  . . .
+  using var worker = new TemporalWorker(client, workerOptions);
   ```
   
-That's it. Now you can run your WF either as normal or in a graph-generation mode when all WF actions are replaced at runtime with mocks and the graph definition is generated. 
+That's it. Now your solution is compatible with WF graph generation. Your WF worker is still as normal as it was before the change. The only change is that it is now capable of building the graph of your WF if it is executed in the graph-building mode. Thus in the graph-generation mode, the WF actions are mocked at runtime and instead the graph definition with the action names as graph nodes is generated. 
 
-This is how you can do it from the worker application.
+This is how you can switch between normal and graph-generation modes based on CLI arguments of your worker process.
 
 ```c#
 bool isBuildingGraph = args.Contains("-graph");
@@ -50,7 +56,11 @@ else
     . . .
 ```
 
-When the graph is generated its definition (see section below) is printed in the console window. Alternatively you can redirect it to the file (UNC or relative to the worker location). Use `ExecutionContext.GraphOutputFile` for that.  
+When the graph is generated its definition (see code above) is written in the `*.graph` file next to the worker assembly file.
+
+Note, you can also generate the graph when you run it in the normal mode. You only need to   
+
+.........
 
 Note WF decision is a special type of a WF action (step) that requires special way of declaring it. This is because Temporal does not recognize Decision as a fist class citizen but instead lets user encoding WS decision nodes as simple programming language conditional statements. This works quite well as Temporal is not concern about the graphs but only logs. However if you are building the graph and wantto capture the decision node then you need to encode it as an Activity which returns either `"True"` or `"False"` strings. You will also need to mark this activity with a new attribute `DecicionAttribute`:
 
