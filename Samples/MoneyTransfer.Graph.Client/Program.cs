@@ -26,5 +26,16 @@ app.MapGet("/api/workflows/{wfId}/runs/{runId}",
 
 Api.ContentRootPath = app.Environment.ContentRootPath;
 
+Task.Run(() =>
+{
+    Console.WriteLine("");
+    Task.Delay(3000).Wait();
+    Console.WriteLine("");
+
+    Console.WriteLine("***************************************************");
+    Console.WriteLine("*  Navigate to https://localhost:7269/index.html  *");
+    Console.WriteLine("***************************************************");
+});
+
 app.Run();
 
