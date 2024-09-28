@@ -77,7 +77,7 @@ WF graph definition:
    ```
    ````
 
-As you can see _Temporalio.Graphs_ can even handle WF Decision nodes that are not natively supported by Temporal. _Temporalio.Graphs_ can also integrate Temporal signals (WaitCondition) even though it is not naturally present ina typical WF graph. See [Architectural Considerations page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Architectural-Considerations#decision-nodes).
+As you can see _Temporalio.Graphs_ can even handle WF Decision nodes that are not natively supported by Temporal. _Temporalio.Graphs_ can also integrate Temporal signals (WaitCondition) even though it is not naturally present in a typical WF graph. See [Architectural Considerations page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Architectural-Considerations#decision-nodes).
 
 The same WF graph definition visualization with Mermaid rendered:
 
