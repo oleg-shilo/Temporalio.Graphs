@@ -30,11 +30,11 @@ internal class RuntimeContext
                 // last hope attempt. The context can be passed as a JSON string
                 context = JsonSerializer.Deserialize<GraphBuilingContext>(input.Args.LastOrDefault()?.ToString() ?? "");
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
         return InitFrom(context);
     }
 
-    public bool InitFrom(GraphBuilingContext context)
+    public bool InitFrom(GraphBuilingContext? context)
     {
         if (context != null)
         {
@@ -43,11 +43,14 @@ internal class RuntimeContext
         }
         return false;
     }
+#pragma warning disable CS8603 // Possible null reference return.
     public Dictionary<(string Name, int Index), bool> CurrentDecisionsPlan => DecisionsPlans.FirstOrDefault();
+#pragma warning restore CS8603 // Possible null reference return.
+
     public List<Dictionary<(string Name, int Index), bool>> DecisionsPlans = new();
     public bool IsBuildingGraph => ClientRequest?.IsBuildingGraph == true;
     public bool SplitNamesByWords => ClientRequest?.SplitNamesByWords == true;
-    internal GraphBuilingContext ClientRequest = null;
+    internal GraphBuilingContext? ClientRequest = null;
     public GraphPath CurrentGraphPath = new GraphPath();
     internal bool initialized = false;
 }

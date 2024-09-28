@@ -11,6 +11,7 @@ using Temporalio.Api.WorkflowService.V1;
 using Temporalio.Client;
 using Temporalio.Workflows;
 
+#pragma warning disable CS8618, CS8604
 //================================================================================
 static class Api
 {
@@ -78,12 +79,12 @@ static class Api
             MermaidOnly = true
         };
 
-        grpc_StartWorkflow_impl(graphRequest, "-graph");
+        await grpc_StartWorkflow_impl(graphRequest, "-graph");
     }
     public static async Task grpc_StartWorkflow()
         => await grpc_StartWorkflow_impl();
 
-    static async Task grpc_StartWorkflow_impl(object context = null, string nameContext = null)
+    static async Task grpc_StartWorkflow_impl(object? context = null, string? nameContext = null)
     {
         var client = await TemporalClient.ConnectAsync(new("localhost:7233") { Namespace = "default" });
 
@@ -101,16 +102,13 @@ static class Api
 
         IReadOnlyCollection<object?> args = new[] { input, context };
 
-        //if (context != null)
-        //    args = new[] { input, context };
-
-        client.StartWorkflowAsync(workflowType, args, new(id: workflowId, taskQueue: "MONEY_TRANSFER_TASK_QUEUE"));
+        await client.StartWorkflowAsync(workflowType, args, new(id: workflowId, taskQueue: "MONEY_TRANSFER_TASK_QUEUE"));
     }
 
     public static async Task<string> grpc_getStatus()
     {
         var executions = new List<object>();
-        TemporalClient client = null;
+        TemporalClient? client = null;
 
         try
         {
@@ -125,7 +123,7 @@ static class Api
             await foreach (WorkflowExecution execution in list)
             {
                 var completionStatus = "";
-                object wfResult = null;
+                object? wfResult = null;
 
                 if (execution.CloseTime != null && execution.Status == WorkflowExecutionStatus.Completed)
                     wfResult = await client.GetWorkflowHandle(execution.Id).GetResultAsync<string>();
@@ -162,12 +160,12 @@ static class Api
         return JsonSerializer.Serialize(result);
     }
 
-    public static string cli_GetWorkflows()
+    public static string? cli_GetWorkflows()
     {
         return TemporalQuery("workflow list --namespace default --query \"ExecutionStatus='Completed' OR ExecutionStatus='Running'\" -o json");
     }
 
-    public static string cli_GetWorkflowHistory(string workflowId, string runId)
+    public static string? cli_GetWorkflowHistory(string workflowId, string runId)
     {
         var json = TemporalQuery($"workflow show -w {workflowId} -r {runId} -o json");
         return json.Any() ? json : "{[]}";
@@ -215,7 +213,7 @@ static class Api
             catch { }
     }
 
-    static string TemporalQuery(string query)
+    static string? TemporalQuery(string query)
     {
         var stopWatch = Stopwatch.StartNew();
 
@@ -230,8 +228,8 @@ static class Api
         // curl https://localhost:7269/api/workflows/pay-invoice-aaabe356-759c-4a8e-9214-488f5e774ead/runs/b1220178-61d9-4e90-a05e-428b2e6a0e7c
         using (var process = Process.Start(processStartInfo))
         {
-            var output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
+            var output = process?.StandardOutput.ReadToEnd();
+            process?.WaitForExit();
             Console.WriteLine($"Elapsed: {stopWatch.ElapsedMilliseconds}ms");
             return output;
         }

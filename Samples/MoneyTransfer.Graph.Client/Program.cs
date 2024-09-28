@@ -1,5 +1,5 @@
 using System;
-
+#pragma warning disable CS4014
 // minapi: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-8.0
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +20,6 @@ app.MapGet("/api/start-wf", Api.grpc_StartWorkflow);
 app.MapGet("/api/start-wf-graph", Api.grpc_StartWorkflowGraphBuild);
 app.MapGet("/api/status", Api.grpc_getStatus);
 app.MapGet("/api/workflows", Api.grpc_GetWorkflows);
-//app.MapGet("/api/workflows", async () => await Api.grpc_GetWorkflows());
 app.MapGet("/api/workflows/{wfId}/runs/{runId}",
     async (string wfId, string runId) => await Api.grpc_GetWorkflowHistory(wfId, runId));
 

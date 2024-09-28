@@ -78,7 +78,7 @@ public class GraphBuilder : IWorkerInterceptor
     /// <value>
     /// The runtime context.
     /// </value>
-    static internal RuntimeContext Runtime
+    static internal RuntimeContext? Runtime
     {
         get
         {
@@ -107,7 +107,9 @@ public class GraphBuilder : IWorkerInterceptor
     /// Initializes a new instance of the <see cref="GraphBuilder"/> class.
     /// </summary>
     /// <param name="stopWorker">The stop worker.</param>
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public GraphBuilder(Action stopWorker)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     {
         StopWorkflowWorker = stopWorker;
     }
@@ -316,13 +318,13 @@ public class GraphBuilder : IWorkerInterceptor
                         {
                             Runtime.CurrentGraphPath.Clear();
 
-                            if (Runtime.ClientRequest.StartNode.IsNotEmpty())
+                            if (Runtime.ClientRequest?.StartNode.IsNotEmpty() == true)
                                 Runtime.CurrentGraphPath.AddStep(Runtime.ClientRequest.StartNode);
 
                             // executing the original WF where the activities will be mocked
                             await base.ExecuteWorkflowAsync(input);
 
-                            if (Runtime.ClientRequest.EndNode.IsNotEmpty())
+                            if (Runtime.ClientRequest?.EndNode.IsNotEmpty() == true)
                                 Runtime.CurrentGraphPath.AddStep(Runtime.ClientRequest.EndNode);
 
                             generator.Scenarios.AddPath(Runtime.CurrentGraphPath);
@@ -332,22 +334,22 @@ public class GraphBuilder : IWorkerInterceptor
                             Runtime.DecisionsPlans.RemoveAt(0);
                         }
 
-                    if (!Runtime.ClientRequest.PreserveDecisionId)
+                    if (!Runtime.ClientRequest?.PreserveDecisionId == true)
                         generator.PrittyfyNodes();
 
                     var result = new StringBuilder();
 
-                    if (!Runtime.ClientRequest.MermaidOnly)
+                    if (!Runtime.ClientRequest?.MermaidOnly == true)
                         result.AppendLine(generator.ToPaths())
                               .AppendLine("--------");
 
                     result.AppendLine(generator.ToMermaidSyntax());
 
-                    if (Runtime.ClientRequest.DoValidation)
+                    if (Runtime.ClientRequest?.DoValidation == true)
                         result.AppendLine("--------")
                               .AppendLine(generator.ValidateGraphAgainst(workflowAssembly));
 
-                    if (Runtime.ClientRequest.GraphOutputFile?.IsNotEmpty() == true)
+                    if (Runtime.ClientRequest?.GraphOutputFile?.IsNotEmpty() == true)
                     {
                         Console.WriteLine();
                         Console.WriteLine($"The WF graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
@@ -360,7 +362,7 @@ public class GraphBuilder : IWorkerInterceptor
                         Console.WriteLine("=====================");
                     }
 
-                    if (Runtime.ClientRequest.ExitAfterBuildingGraph)
+                    if (Runtime.ClientRequest?.ExitAfterBuildingGraph == true)
                     {
                         StopWorkflowWorker();
                     }

@@ -27,7 +27,7 @@ public static class WF
     /// <see cref="ActivityOptions.ScheduleToCloseTimeout" /> or
     /// <see cref="ActivityOptions.StartToCloseTimeout" /> must be set.</param>
     /// <returns></returns>
-    public static Task<bool> Decision(Expression<Func<bool>> activityCall, ActivityOptions options = null)
+    public static Task<bool> Decision(Expression<Func<bool>> activityCall, ActivityOptions? options = null)
       => Workflow.ExecuteActivityAsync(activityCall, options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
 
     /// <summary>
@@ -38,7 +38,7 @@ public static class WF
     /// <param name="decisionName">Name of the decision. If not specified, it will be derived from the result parameter name.</param>
     /// <param name="options">Activity options. If not specified then the option with <see cref="ActivityOptions.StartToCloseTimeout" /> 5 minutes will be used.</param>
     /// <returns>Task for completion with result.</returns>
-    public static Task<bool> ToDecision(this bool? result, [CallerArgumentExpression("result")] string decisionName = "", ActivityOptions options = null)
+    public static Task<bool> ToDecision(this bool? result, [CallerArgumentExpression("result")] string decisionName = "", ActivityOptions? options = null)
         => ToDecision(result ?? false, decisionName, options);
 
     /// <summary>
@@ -49,10 +49,11 @@ public static class WF
     /// <param name="decisionName">Name of the decision. If not specified, it will be derived from the result parameter name.</param>
     /// <param name="options">Activity options. If not specified then the option with <see cref="ActivityOptions.StartToCloseTimeout" /> 5 minutes will be used.</param>
     /// <returns>Task for completion with result.</returns>
-    public static Task<bool> ToDecision(this bool result, [CallerArgumentExpression("result")] string decisionName = "", ActivityOptions options = null)
+    public static Task<bool> ToDecision(this bool result, [CallerArgumentExpression("result")] string decisionName = "", ActivityOptions? options = null)
         => Workflow.ExecuteActivityAsync( // add step with the dcisionName to the graph definition
                (GenericActivities b) => b.MakeDecision(result, decisionName, decisionName.ToDecisionId(), "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
 
+#pragma warning disable CS8604 // Possible null reference argument.
     /// <summary>
     /// Converts a boolean returning expression into a dynamically generated <see cref="Activity"/> and executes it 
     /// if the workflow is running in the build-graph mode. Otherwise, it returns the result immediately.
@@ -61,7 +62,7 @@ public static class WF
     /// <param name="decisionName">Name of the decision. If not specified, it will be derived from the result parameter name.</param>
     /// <param name="options">Activity options. If not specified then the option with <see cref="ActivityOptions.StartToCloseTimeout" /> 5 minutes will be used.</param>
     /// <returns>Task for completion with result.</returns>
-    public static Task<bool> GenericDecision(this Expression<Func<bool>> activityCall, string decisionName = null, ActivityOptions options = null)
+    public static Task<bool> GenericDecision(this Expression<Func<bool>> activityCall, string? decisionName = null, ActivityOptions? options = null)
     {
         var activityName = decisionName;
         if (activityName.IsEmpty() && activityCall.Body is MemberExpression memberExpression)
@@ -81,6 +82,7 @@ public static class WF
         }
         return Workflow.ExecuteActivityAsync((GenericActivities b) => b.MakeDecision(result, activityName, activityName.ToDecisionId(), "yes|no"), options ?? new ActivityOptions { StartToCloseTimeout = TimeSpan.FromMinutes(5) });
     }
+#pragma warning restore CS8604 // Possible null reference argument.
 
     /// <summary>
     /// This method overwrites <see cref="Workflow.WaitConditionAsync"/> (wait for signal) to allow 
@@ -96,7 +98,7 @@ public static class WF
     /// <see cref="ActivityOptions.ScheduleToCloseTimeout" /> or
     /// <see cref="ActivityOptions.StartToCloseTimeout" /> must be set.</param>
     /// <returns>Task for completion with result.</returns>
-    public static Task<bool> WaitConditionAsync(Func<bool> conditionCheck, TimeSpan timeout, CancellationToken? cancellationToken = null, [CallerArgumentExpression("conditionCheck")] string conditionName = "", ActivityOptions options = null)
+    public static Task<bool> WaitConditionAsync(Func<bool> conditionCheck, TimeSpan timeout, CancellationToken? cancellationToken = null, [CallerArgumentExpression("conditionCheck")] string conditionName = "", ActivityOptions? options = null)
     {
         if (!GraphBuilder.IsBuildingGraph)
         {

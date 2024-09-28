@@ -191,7 +191,7 @@ public static class GenericExtensions
     /// <returns>
     ///   <c>true</c> if the specified items is empty; otherwise, <c>false</c>.
     /// </returns>
-    public static bool IsEmpty<T>(this IEnumerable<T> items)
+    public static bool IsEmpty<T>(this IEnumerable<T>? items)
         => items == null ? true : items.Count() == 0;
 
     /// <summary>
@@ -228,7 +228,7 @@ public static class GenericExtensions
     /// <param name="info">The information.</param>
     /// <returns></returns>
     public static string FullName(this MemberInfo info)
-        => $"{info.DeclaringType.FullName}.{info.Name}";
+        => $"{info.DeclaringType?.FullName}.{info.Name}";
 
     /// <summary>
     /// Gets the attributes.
@@ -249,7 +249,9 @@ public static class GenericExtensions
     /// <returns></returns>
     public static dynamic GetFieldValue(this object obj, string value, BindingFlags flag = BindingFlags.Default)
     {
-        return obj
+#pragma warning disable CS8603 // Possible null reference return.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+        return obj?
           .GetType()
           .GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | flag)
           .FirstOrDefault(x => x.Name == value)
@@ -271,6 +273,8 @@ public static class GenericExtensions
           .FirstOrDefault(x => x.Name == value)
           .GetValue(obj);
     }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+#pragma warning restore CS8603 // Possible null reference return.
 }
 static class GraphsExtensions
 {

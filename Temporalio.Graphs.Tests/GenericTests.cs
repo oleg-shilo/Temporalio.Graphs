@@ -1,6 +1,8 @@
 // Ignore Spelling: Workflow
-
-//using Google.Protobuf.WellKnownTypes;
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CA1822 // Mark members as static
 using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
@@ -212,13 +214,13 @@ public class TestActivityDecisions
     [Decision]
     [Activity]
     public async Task<bool> NeedToRefundAsync() => true;
-
 }
 
 
 public class TestWorkflowActivities
 {
     [Activity]
+
     public static async Task<string> StepAAsync() => "";
     [Activity]
     public static async Task<string> StepBAsync() => "";

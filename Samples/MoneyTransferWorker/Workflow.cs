@@ -1,4 +1,5 @@
 // @@@SNIPSTART money-transfer-project-template-dotnet-workflow
+#pragma warning disable CS8604 // Possible null reference argument for parameter
 namespace Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.MoneyTransferProject.BankingService.Exceptions;
 using Temporalio.Workflows;

@@ -1,6 +1,6 @@
 // @@@SNIPSTART money-transfer-project-template-dotnet-withdraw-activity
 namespace Temporalio.MoneyTransferProject.MoneyTransferWorker;
-
+#pragma warning disable CS1998 
 using System.Runtime.CompilerServices;
 using Temporalio.Graphs;
 using Temporalio.Activities;

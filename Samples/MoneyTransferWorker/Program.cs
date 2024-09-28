@@ -1,16 +1,17 @@
 // @@@SNIPSTART money-transfer-project-template-dotnet-worker
 // This file is designated to run the worker
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+#pragma warning disable CS8604 // Possible null reference argument for parameter
 using Temporalio.Client;
 using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Graphs;
-using System.Diagnostics;
 
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (_, eventArgs) =>
-{   
+{
     tokenSource.Cancel();
     eventArgs.Cancel = true;
 };
@@ -18,7 +19,6 @@ Console.CancelKeyPress += (_, eventArgs) =>
 // Create an instance of the activities since we have instance activities.
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
-
 
 var interceptor = new GraphBuilder(tokenSource.Cancel);
 
@@ -47,6 +47,7 @@ if (isBuildingGraph) // graph building mode
         //StartNode: "s((In))",
         //EndNode: "e((Out))"
         );
+
 
     await workerOptions.ExecuteWorkerInMemory(
         (MoneyTransferWorkflow wf) => wf.RunAsync(null, null));

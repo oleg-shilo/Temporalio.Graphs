@@ -1,15 +1,15 @@
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End Node
-Start Node > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End Node
+Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
+Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
 --------
 ```mermaid
 flowchart LR
-StartNode[Start Node] --> Withdraw
+s((Start)) --> Withdraw
 Withdraw --> -1485020306{Currency != 'AUD'}
 -1485020306{Currency != 'AUD'} -- yes --> ConvertCurrency[Convert Currency]
 ConvertCurrency[Convert Currency] --> 78577353{Is TFN Known}
@@ -18,11 +18,11 @@ NotifyAto[Notify Ato] --> Deposit
 Deposit --> 1546202137{{Interpol Check}}
 1546202137{{Interpol Check}} -- Signaled --> Refund
 Refund --> NotifyPolice[Notify Police]
-NotifyPolice[Notify Police] --> e((End))Node[End Node]
+NotifyPolice[Notify Police] --> e((End))
 78577353{Is TFN Known} -- no --> TakeNonResidentTax[Take Non Resident Tax]
 TakeNonResidentTax[Take Non Resident Tax] --> Deposit
 -1485020306{Currency != 'AUD'} -- no --> 78577353{Is TFN Known}
-1546202137{{Interpol Check}} -- Timeout --> e((End))Node[End Node]
+1546202137{{Interpol Check}} -- Timeout --> e((End))
 ```
 --------
 WARNING: the following activities are not present in the full WF graph: 

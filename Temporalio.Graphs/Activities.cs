@@ -59,6 +59,8 @@ static class GenericActivitiesExtension
         if (activityMethod.DeclaringType == typeof(GenericActivities) &&
             activityMethod.Name == nameof(GenericActivities.MakeDecision))
         {
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8605 // Unboxing a possibly null value.
             // args will always have 3 args
             // activityMethod: bool MakeDecision(bool result, string name, string id, string resultText)
 
@@ -74,6 +76,8 @@ static class GenericActivitiesExtension
 
             return (decisionName, decisionId, input.Args[3]?.ToString() ?? "");
         }
+#pragma warning restore CS8605 // Unboxing a possibly null value.
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
 
         var decisionInfo = activityMethod.GetCustomAttribute<DecisionAttribute>();
         if (decisionInfo != null)
