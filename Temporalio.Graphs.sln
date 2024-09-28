@@ -14,6 +14,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransferWorker", "Samples\MoneyTransferWorker\MoneyTransferWorker.csproj", "{6D424673-7CCE-4CBF-8423-96827565DC52}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoneyTransfer.Graph.Client", "Samples\MoneyTransfer.Graph.Client\MoneyTransfer.Graph.Client.csproj", "{1E0716D1-77C6-4EFF-B960-4CEE7E5ADD18}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6D424673-7CCE-4CBF-8423-96827565DC52} = {6D424673-7CCE-4CBF-8423-96827565DC52}
+		{D6060409-BE17-4669-8AD9-C4BDBF6CB47D} = {D6060409-BE17-4669-8AD9-C4BDBF6CB47D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

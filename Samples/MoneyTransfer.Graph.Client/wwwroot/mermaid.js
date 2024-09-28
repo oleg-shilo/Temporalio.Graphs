@@ -67,7 +67,7 @@ TakeNonResidentTax[Take Non Resident Tax] --> Deposit
         })
         .filter(x => !x.includes("flowchart") && x.length > 0);
     allNodes = Array.from(new Set(allNodes));
-    console.log(allNodes);
+    // console.log(allNodes);
 
 
     text = text + `\n\nclassDef activeStep fill:#e94,stroke-width:1px;\nclassDef selectedStep stroke:#f96,stroke-width:2px;`;

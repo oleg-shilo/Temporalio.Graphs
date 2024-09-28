@@ -24,21 +24,21 @@
             <tr class="queue">
                 <td>
                     <div class="dropdowns">
-                        <select id="pendingQueue" size="10">
+                        <select title="Pending Jobs" id="pendingQueue" size="10">
                             <option>&nbsp;</option>
                         </select>
                     </div>
                 </td>
                 <td>
                     <div class="dropdowns">
-                        <select id="inprogressQueue" size="10">
+                        <select title="In-progress Jobs" id="inprogressQueue" size="10">
                             <option>&nbsp;</option>
                         </select>
                     </div>
                 </td>
                 <td>
                     <div class="dropdowns">
-                        <select id="processedQueue" size="10">
+                        <select title="Completed Jobs" id="processedQueue" size="10">
                             <option>&nbsp;</option>
                         </select>
                     </div>
@@ -47,26 +47,26 @@
                     <table>
                         <tr>
                             <td> <b>Server:</b> </td>
-                            <td> <a href="javascript:null" onclick="startServer()">Start</a></td>
-                            <td> <a href="javascript:null" onclick="stopServer()">Stop</a></td>
+                            <td> <a href="javascript:void()" onclick="startServer()">Start</a></td>
+                            <td> <a href="javascript:void()" onclick="stopServer()">Stop</a></td>
                             <td> <span id="serverStatus">...</span> </td>
                         </tr>
 
                         <tr>
                             <td> <b>Worker:</b> </td>
-                            <td> <a href="javascript:null" onclick="startWorker()">Start</a></td>
-                            <td> <a href="javascript:null" onclick="stopWorker()">Stop</a></td>
+                            <td> <a href="javascript:void()" onclick="startWorker()">Start</a></td>
+                            <td> <a href="javascript:void()" onclick="stopWorker()">Stop</a></td>
                             <td> <span id="workerStatus">...</span> </td>
                         </tr>
                         <tr>
                             <td> <b>Workflow:</b> </td>
-                            <td> <a href="javascript:null" onclick="startWorkflow()">Start</a></td>
+                            <td> <a href="javascript:void()" onclick="startWorkflow()">Start</a></td>
                             <td> </td>
                             <td> </td>
                         </tr>
                         <tr>
                             <td> </td>
-                            <td> <a href="javascript:null" onclick="startWorkflowGraph()">Graph</a></td>
+                            <td> <a href="javascript:void()" onclick="startWorkflowGraph()">Graph</a></td>
                             <td> </td>
                             <td> </td>
                         </tr>
