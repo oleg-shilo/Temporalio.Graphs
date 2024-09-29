@@ -113,7 +113,7 @@ Note, that points #1 and #2 are integral parts of the nuget package. Point #3 is
 Before running this application, ensure you have the following installed:
 
 * [.NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) or later
-* [Temporal CLI](https://learn.temporal.io/getting_started/dotnet/dev_environment/)
+* [Temporal CLI](https://learn.temporal.io/getting_started/dotnet/dev_environment/) (a ready to go version of Temporal CLI is [included in the repo](https://github.com/oleg-shilo/Temporalio.Graphs/tree/v1.0.0.0/Samples/MoneyTransfer.Graph.Client/temporal.cli))
 
 ## Steps to get started
 
