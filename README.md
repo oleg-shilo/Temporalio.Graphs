@@ -6,7 +6,7 @@ The obvious limitation of DAG (inability to support loops) comes with a great be
 
 Temporal belongs to the DAG-less family of WF engines. Thus, it offers somewhat limited visualization capabilities that are sacrificed for the more flexible architecture.  
 
-Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WH regardless of how far the execution progressed. The problem has been detected and even [discussed](https://community.temporal.io/t/see-workflow-as-a-dag/2010) in the Temporal community but without any significant progress in addressing it. 
+Temporal (out of the box) only offers the WF visualization for the already executed steps - Timeline View. This creates a capability gap for the UI scenarios when it is beneficial to see the whole WF regardless of how far the execution progressed. The problem has been detected and even [discussed](https://community.temporal.io/t/see-workflow-as-a-dag/2010) in the Temporal community but without significant progress in addressing it. 
 
 This project is an attempt to fill this gap.
 
@@ -15,7 +15,7 @@ _Note: this project specifically targets .NET binding for Temporal. However, the
 
 _Temporalio.Graphs_ is a library (NuGet package) that can be used to generate a complete WF graph by running the WF in the mocked-run mode when WF activities are mocked and instead of being executed the activities simply  trigger logging WF steps that become the specification of the complete WF graph.
 
-To achieve that you will need to add `Temporalio.Graphs` NuGet package to your worker project and then add a special graph-building interceptor and register the special activity defined in the `Temporalio.Graphs.GenericActivities` class.
+To achieve that, you will need to add the `Temporalio.Graphs` NuGet package to your worker project, add a special graph-building interceptor, and register the special activity defined in the `Temporalio.Graphs.GenericActivities` class.
 
 These are the step-by-step instructions:
 
@@ -60,9 +60,9 @@ These are the step-by-step instructions:
       . . .
   ```
 
-  When the graph is generated its definition (see code above) is written in the `*.graph` file next to the worker assembly file.
+  en the graph is generated its definition (see code above) is written in the `*.graph` file next to the worker assembly file.
 
-Note, that you can also generate the graph when you run your worker in the normal mode. You only need to supply `Temporalio.Graphs.GraphBuilingContext` as input for your workflow when you start it. The result of such a workflow will be the graph definition. See the [samples page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Samples#moneytransfer-graph-client) for that.
+Note, that you can also generate the graph en you run your worker in the normal mode. You only need to supply `Temporalio.Graphs.GraphBuilingContext` as input for your workflow when you start it. The result of such a workflow will be the graph definition. See the [samples page](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Samples#moneytransfer-graph-client) for that.
 
 When it comes to the way the WF grap is defined it needs to be simple and easy to work with format/syntax. In _Temporalio.Graph_ the primary syntax for graphs is Mermaid. Below is an example of the graph built for a sample WF:
 
