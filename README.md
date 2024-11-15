@@ -102,8 +102,8 @@ You can control what content should be included in the graph output (e.g. limit 
 1. Generate static WF graph definition (Mermaid) file 
 2. Generate WF graph definition dynamically on the running instance of Temporal Worker (e.g. in production)  
 3. Host WF graph in a web application 
-  - with the ability for the user to interact with graph elements (WF steps) and display selected element details   
-  - showing the runtime state of the whole WF (e.g. current step, WF input and output)  
+    - with the ability for the user to interact with graph elements (WF steps) and display selected element details   
+    - showing the runtime state of the whole WF (e.g. current step, WF input and output)  
 
 The samples of all product features listed above are captured in the samples [described here](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Samples).
 Note, that points #1 and #2 are integral parts of the nuget package. Point #3 is a POC sample available in this repository to assist users of _Temporalio.Graphs_ to utilise WF graphs in their products. 
@@ -113,7 +113,7 @@ Note, that points #1 and #2 are integral parts of the nuget package. Point #3 is
 Before running this application, ensure you have the following installed:
 
 * [.NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) or later
-* [Temporal CLI](https://learn.temporal.io/getting_started/dotnet/dev_environment/) (a ready to go version of Temporal CLI is [included in the repo](https://github.com/oleg-shilo/Temporalio.Graphs/tree/v1.0.0.0/Samples/MoneyTransfer.Graph.Client/temporal.cli))
+* [Temporal CLI](https://learn.temporal.io/getting_started/dotnet/dev_environment/) (a ready-to-go version of Temporal CLI is [included in the repo](https://github.com/oleg-shilo/Temporalio.Graphs/tree/v1.0.0.0/Samples/MoneyTransfer.Graph.Client/temporal.cli))
 
 ## Steps to get started
 
@@ -122,7 +122,7 @@ Before running this application, ensure you have the following installed:
 - Clone this repository
 - Execute _run.cmd_ in the repository root. It will run a simple web application that shows cases all _Temporalio.Graphs_ features. See [sample description](https://github.com/oleg-shilo/Temporalio.Graphs/wiki/Samples#moneytransfer-graph-client). 
 
-### Integrating _Temporalio.Graphs_ in yourv product
+### Integrating _Temporalio.Graphs_ in your product
 
 - Add _Temporalio.Graphs_ package from https://www.nuget.org/packages/OlegShilo.Temporalio.Graphs 
 - Update your Temporal worker to use _Temporalio.Graphs_ grap-building interceptors as shown in the Solution section above or in the [worker sample in this repository](https://github.com/oleg-shilo/Temporalio.Graphs/blob/main/Samples/MoneyTransferWorker/Program.cs).
