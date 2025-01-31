@@ -22,23 +22,56 @@ namespace Temporalio.Graphs;
 /// <summary>
 /// 
 /// </summary>
-/// <param name="IsBuildingGraph"></param>
-/// <param name="ExitAfterBuildingGraph"></param>
-/// <param name="GraphOutputFile">File name to store the graph. </param>
-/// <param name="SplitNamesByWords"></param>
-/// <param name="DoValidation"></param>
-/// <param name="PreserveDecisionId"></param>
-/// <param name="MermaidOnly"></param>
-/// <param name="StartNode"></param>
-/// <param name="EndNode"></param>
-public record GraphBuilingContext(
+/// <param name="IsBuildingGraph">
+/// Flag to indicate that the workflow is running in the building-graph mode.
+/// </param>
+/// <param name="ExitAfterBuildingGraph">
+/// Flag to indicate that the workflow should stop the application after building the graph.
+/// </param>
+/// <param name="GraphOutputFile">
+/// Path to the file where the graph will be saved. If it is not specified, the graph will be 
+/// printed to the console.
+/// </param>
+/// <param name="SplitNamesByWords">
+/// Flag to indicate that the node's names should be split by words for better readability of the graph.
+/// </param>
+/// <param name="SuppressValidation">
+/// Flag to suppress abandoned activities validation when building the graph.
+/// </param>
+/// <param name="PreserveDecisionId">  
+/// Flag to preserve the decision ID in the graph.
+/// <p>Decision id embedded in the graph can be used as a key to look up the SVG node in the rendered 
+/// HTML with the graph.</p>
+/// </param>
+/// <param name="MermaidOnly">
+/// Generate only the Mermaid syntax of the graph.
+/// </param>
+/// <param name="SuppressActivityMocking">
+/// If true then the activities will not be mocked even during the graph build.
+/// <p>This mode can be convenient if your activities are triggering other activities, which
+/// you may want to record in the graph. In this case any mocking needs to be don in the activity itself
+/// by executing alternative business logic based on the value of the <see cref="GraphBuilder.IsBuildingGraph"/> 
+/// property.
+/// Thus </p>
+/// </param>
+/// <param name="StartNode">
+/// The display name of the start node name. "Start" is the default value.
+/// <p>You can overwrite it with a more meaningful value (e.g. "e((Start of file processing))")</p>
+/// </param>
+/// <param name="EndNode">
+/// The display name of the end node name. "End" is the default value.
+/// <p>You can overwrite it with a more meaningful value (e.g. "e((End of file processing))")</p>
+/// </p>
+/// </param>
+public record GraphBuildingContext(
         bool IsBuildingGraph,
         bool ExitAfterBuildingGraph,
         string? GraphOutputFile = null,
         bool SplitNamesByWords = false,
-        bool DoValidation = true,
+        bool SuppressValidation = true,
         bool PreserveDecisionId = true,
         bool MermaidOnly = false,
+        bool SuppressActivityMocking = false,
         string StartNode = "Start",
         string EndNode = "End");
 
@@ -101,7 +134,7 @@ public class GraphBuilder : IWorkerInterceptor
     /// <value>
     /// The client request.
     /// </value>
-    public GraphBuilingContext ClientRequest { get; set; }
+    public GraphBuildingContext ClientRequest { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GraphBuilder"/> class.
@@ -211,7 +244,15 @@ public class GraphBuilder : IWorkerInterceptor
                     {
                         // mocked normal activity
                         Runtime.CurrentGraphPath.AddStep(activityName);
-                        return null; // returning null as we are mocking the activity
+                        try
+                        {
+                            if (Runtime.ClientRequest?.SuppressActivityMocking == true)
+                                return await base.ExecuteActivityAsync(input); // any mocking is to be don in the activity
+                        }
+                        catch
+                        {
+                        }
+                        return null; // returning null is OK, as we are mocking the activity
                     }
                 }
                 else
@@ -246,13 +287,13 @@ public class GraphBuilder : IWorkerInterceptor
             }
         }
 
-        GraphBuilingContext context;
+        GraphBuildingContext context;
         /// <summary>
         /// Initializes a new instance of the <see cref="WorkflowInbound"/> class.
         /// </summary>
         /// <param name="next">The next.</param>
         /// <param name="context">The context.</param>
-        public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuilingContext context) : base(next)
+        public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuildingContext context) : base(next)
         {
             this.context = context;
         }
@@ -284,8 +325,8 @@ public class GraphBuilder : IWorkerInterceptor
 
                     var generator = new GraphGenerator();
 
-                    // if there is no decision nodes then there will be only once decision plan
-                    // Otherwise there will be as many as decisions permutations (graph paths)
+                    // if there is no decision nodes then there will be only one decision plan
+                    // Otherwise there will be as many plans as decisions permutations (graph paths)
                     // IE:
                     // no decisions: 1 path,
                     // 1 decision:   2 paths,
@@ -325,15 +366,15 @@ public class GraphBuilder : IWorkerInterceptor
 
                     result.AppendLine(generator.ToMermaidSyntax());
 
-                    if (Runtime.ClientRequest?.DoValidation == true)
+                    if (Runtime.ClientRequest?.SuppressValidation == false)
                         result.AppendLine("--------")
                               .AppendLine(generator.ValidateGraphAgainst(workflowAssembly));
 
                     if (Runtime.ClientRequest?.GraphOutputFile?.IsNotEmpty() == true)
                     {
                         Console.WriteLine();
-                        Console.WriteLine($"The WF graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
-                        File.WriteAllText(Runtime.ClientRequest.GraphOutputFile, result.ToString());
+                        Console.WriteLine($"The {input.Instance.GetType().Name} graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
+                        File.AppendAllText(Runtime.ClientRequest.GraphOutputFile, result.ToString());
                     }
                     else
                     {

@@ -23,20 +23,20 @@ internal class RuntimeContext
 {
     public bool InitFrom(ExecuteWorkflowInput input)
     {
-        var context = input.Args.OfType<GraphBuilingContext>().FirstOrDefault();
+        var context = input.Args.OfType<GraphBuildingContext>().FirstOrDefault();
         if (context == null)
             try
             {
                 // last hope attempt. The context can be passed as a JSON string
                 var json = input.Args.LastOrDefault()?.ToString();
                 if (!string.IsNullOrEmpty(json))
-                    context = JsonSerializer.Deserialize<GraphBuilingContext>(json);
+                    context = JsonSerializer.Deserialize<GraphBuildingContext>(json);
             }
             catch (Exception) { }
         return InitFrom(context);
     }
 
-    public bool InitFrom(GraphBuilingContext? context)
+    public bool InitFrom(GraphBuildingContext? context)
     {
         if (context != null)
         {
@@ -52,7 +52,7 @@ internal class RuntimeContext
     public List<Dictionary<(string Name, int Index), bool>> DecisionsPlans = new();
     public bool IsBuildingGraph => ClientRequest?.IsBuildingGraph == true;
     public bool SplitNamesByWords => ClientRequest?.SplitNamesByWords == true;
-    internal GraphBuilingContext? ClientRequest = null;
+    internal GraphBuildingContext? ClientRequest = null;
     public GraphPath CurrentGraphPath = new GraphPath();
     internal bool initialized = false;
 }

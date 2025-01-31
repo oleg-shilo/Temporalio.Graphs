@@ -66,6 +66,7 @@ public static class TemporalExtensions
         await using var env = await WorkflowEnvironment.StartLocalAsync();
         using var worker = new TemporalWorker(env.Client, workerOptions);
         WorkflowOptions options = new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!);
+
         try
         {
 
@@ -79,7 +80,26 @@ public static class TemporalExtensions
             if (rethrow)
                 throw;
         }
+    }
 
+    public async static Task ExecuteWorker<TWorkflow, TResult>(this WorkflowEnvironment env, TemporalWorkerOptions workerOptions, Expression<Func<TWorkflow, Task<TResult>>> workflowRunCall, bool rethrow = false)
+    {
+        using var worker = new TemporalWorker(env.Client, workerOptions);
+        WorkflowOptions options = new(id: $"wf-{Guid.NewGuid()}", taskQueue: worker.Options.TaskQueue!);
+
+        try
+        {
+
+            await worker.ExecuteAsync(async () =>
+            {
+                var result = await ((ITemporalClient)worker.Client).ExecuteWorkflowAsync(workflowRunCall, options);
+            });
+        }
+        catch (Exception)
+        {
+            if (rethrow)
+                throw;
+        }
     }
 }
 

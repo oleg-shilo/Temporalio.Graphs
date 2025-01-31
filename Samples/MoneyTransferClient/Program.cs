@@ -19,7 +19,7 @@ var details = new PaymentDetails(
     ReferenceId: "12345"
 );
 
-var context = new Temporalio.Graphs.GraphBuilingContext(
+var context = new Temporalio.Graphs.GraphBuildingContext(
     IsBuildingGraph: args.Contains("-graph"),
     ExitAfterBuildingGraph: args.Contains("-graph-exit"),
     GraphOutputFile: args.FirstOrDefault(x => x.StartsWith("-graph-out:"))?.Replace("-graph-out:", "")
