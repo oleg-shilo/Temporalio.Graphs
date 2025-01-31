@@ -6,6 +6,27 @@ using Temporalio.Graphs;
 using Temporalio.Activities;
 using Temporalio.Exceptions;
 
+public class MathActivities
+{
+    [Activity]
+    public async Task<string> StartFileProcessingWorkflowAsync(string file)
+    {
+        return $"Processing file: {file}";
+    }
+
+    [Activity]
+    public async Task<string> DiscoverFilesAsync(string dir)
+    {
+        return "a.xml|b.xml";
+    }
+
+    [Activity]
+    public async Task<string> LockFileFileAsync(string file)
+    {
+        return $"Locking file: {file}";
+    }
+}
+
 public class BankingActivities
 {
     public static int averageActivityDuration = 4000;

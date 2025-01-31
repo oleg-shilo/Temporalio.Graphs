@@ -232,7 +232,7 @@ function getWfEvents() {
 function setSelectedStepInfo(activityId, textContent, nodesInfo) {
 
     const infoTag = document.querySelector('#stepInfo');
-    let eventData = { started: "", ended: "", status: "not executed", type: "activity", result: "..." };
+    let eventData = { started: "", ended: "", eventId: "", status: "not executed", type: "activity", result: "..." };
 
     if (wfEvents) {
         let event = wfEvents.find(e => e.activityTaskScheduledEventAttributes?.activityType.name === activityId);
@@ -273,6 +273,7 @@ function setSelectedStepInfo(activityId, textContent, nodesInfo) {
             }
 
             eventData.started = new Date(event.eventTime).toLocaleString();
+            eventData.eventId = event.eventId;
 
             eventData.status = (event.activityTaskScheduledEventAttributes.workflowTaskCompletedEventId.toString() === undefined ? "In-progress" : "Competed");
         }
@@ -292,6 +293,7 @@ function setSelectedStepInfo(activityId, textContent, nodesInfo) {
             `<b>Name:</b> ${textContent}<br>
              <b>Type:</b> ${eventData.type}<br>
              <b>Result:</b> ${eventData.result}<br>
+             <b>EventId:</b> ${eventData.eventId}<br>
              <b>Started:</b> ${eventData.started}<br>
              <b>Ended:</b> ${eventData.ended}<br>
              <b>Status:</b> ${eventData.status}`;
@@ -311,6 +313,7 @@ function setSelectedStepInfo(activityId, textContent, nodesInfo) {
         infoTag.innerHTML =
             `<b>Name:</b> ${textContent}<br>
              <b>Type:</b> ${eventData.type}<br>
+             <b>EventId:</b> ${eventData.eventId}<br>
              <b>Started:</b> ${eventData.started}<br>
              <b>Ended:</b> ${eventData.ended}<br>
              <b>Status:</b> ${eventData.status}`;

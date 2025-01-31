@@ -218,7 +218,16 @@ public class GraphBuilder : IWorkerInterceptor
                             var isTask = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>);
                             if (isTask)
                             {
-                                var result = Activator.CreateInstance(type.GetGenericArguments()[0]);
+                                // trying to create a default instance of the return type of the activity
+                                // if fails then return null
+                                object? result = null;
+
+                                // string is a special case when we know the default constructor will fail
+                                if (type.GetGenericArguments()[0] == typeof(string))
+                                    result = Activator.CreateInstance(type.GetGenericArguments()[0], "".ToArray());
+                                else
+                                    result = Activator.CreateInstance(type.GetGenericArguments()[0]);
+
                                 return Task.FromResult(result);
                             }
                             else
@@ -304,8 +313,8 @@ public class GraphBuilder : IWorkerInterceptor
 
                     var generator = new GraphGenerator();
 
-                    // if there is no decision nodes then there will be only once decision plan
-                    // Otherwise there will be as many as decisions permutations (graph paths)
+                    // if there is no decision nodes then there will be only one decision plan
+                    // Otherwise there will be as many plans as decisions permutations (graph paths)
                     // IE:
                     // no decisions: 1 path,
                     // 1 decision:   2 paths,

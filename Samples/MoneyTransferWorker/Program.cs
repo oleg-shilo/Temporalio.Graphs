@@ -16,9 +16,10 @@ Console.CancelKeyPress += (_, eventArgs) =>
     eventArgs.Cancel = true;
 };
 
-// Create an instance of the activities since we have instance activities.
+// Create an instance of the activities since we have "instance activities".
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
+var activities2 = new MathActivities();
 
 var interceptor = new GraphBuilder(tokenSource.Cancel);
 
@@ -30,7 +31,9 @@ var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QU
 workerOptions
     .AddAllActivities<Temporalio.Graphs.GenericActivities>()
     .AddAllActivities(activities)           // Register activities
-    .AddWorkflow<MoneyTransferWorkflow>();  // Register workflow
+    .AddAllActivities(activities2)
+    .AddWorkflow<MoneyTransferWorkflow>()  // Register workflow
+    .AddWorkflow<PlaygroundWorkflow>();  // Register workflow
 
 // ========================================================================================
 
@@ -41,16 +44,23 @@ if (isBuildingGraph) // graph building mode
     interceptor.ClientRequest = new Temporalio.Graphs.GraphBuilingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
-        GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
+        // GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
         SplitNamesByWords: true
         // if you need to modify edge nodes with Mermaid node syntax
         //StartNode: "s((In))",
         //EndNode: "e((Out))"
         );
 
-
-    await workerOptions.ExecuteWorkerInMemory(
-        (MoneyTransferWorkflow wf) => wf.RunAsync(null, null));
+    // Define payment details
+    //var details = new PaymentDetails(
+    //    SourceAccount: "85-150",
+    //    TargetAccount: "43-812",
+    //    Amount: 400,
+    //    Currency: "USD",
+    //    ReferenceId: "12345"
+    //);
+    //await workerOptions.ExecuteWorkerInMemory((MoneyTransferWorkflow wf) => wf.RunAsync(details, null));
+    await workerOptions.ExecuteWorkerInMemory((PlaygroundWorkflow wf) => wf.RunAsync(null));
 }
 else // normal mode
 {
