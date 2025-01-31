@@ -28,9 +28,9 @@ internal class RuntimeContext
             try
             {
                 // last hope attempt. The context can be passed as a JSON string
-                var inputArg = input.Args.LastOrDefault()?.ToString();
-                if (inputArg.IsNotEmpty())
-                    context = JsonSerializer.Deserialize<GraphBuilingContext>(inputArg);
+                var json = input.Args.LastOrDefault()?.ToString();
+                if (!string.IsNullOrEmpty(json))
+                    context = JsonSerializer.Deserialize<GraphBuilingContext>(json);
             }
             catch (Exception) { }
         return InitFrom(context);
