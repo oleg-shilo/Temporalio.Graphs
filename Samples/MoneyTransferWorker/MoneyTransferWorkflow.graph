@@ -1,12 +1,11 @@
-Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Signaled > Refund > Notify Police > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:yes > Notify Ato > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:yes > Convert Currency > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
-Start > Withdraw > -1485020306{Currency != 'AUD'}:no > 78577353{Is TFN Known}:no > Take Non Resident Tax > Deposit > 1546202137{Interpol Check:&sgnl;}:Timeout > End
---------
+```mermaid
+flowchart LR
+s((Start)) --> DiscoverFiles[Discover Files]
+DiscoverFiles[Discover Files] --> LockFile[Lock File]
+LockFile[Lock File] --> StartFileProcessingWorkflow[Start File Processing Workflow]
+StartFileProcessingWorkflow[Start File Processing Workflow] --> LockFile[Lock File]
+StartFileProcessingWorkflow[Start File Processing Workflow] --> e((End))
+```
 ```mermaid
 flowchart LR
 s((Start)) --> Withdraw
@@ -24,6 +23,3 @@ TakeNonResidentTax[Take Non Resident Tax] --> Deposit
 -1485020306{Currency != 'AUD'} -- no --> 78577353{Is TFN Known}
 1546202137{{Interpol Check}} -- Timeout --> e((End))
 ```
---------
-WARNING: the following activities are not present in the full WF graph: 
-Temporalio.MoneyTransferProject.MoneyTransferWorker.BankingActivities.DeliberatelyAbandonedActivityAsync

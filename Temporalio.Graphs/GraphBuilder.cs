@@ -24,11 +24,19 @@ namespace Temporalio.Graphs;
 /// </summary>
 /// <param name="IsBuildingGraph"></param>
 /// <param name="ExitAfterBuildingGraph"></param>
-/// <param name="GraphOutputFile">File name to store the graph. </param>
+/// <param name="GraphOutputFile"></param>
 /// <param name="SplitNamesByWords"></param>
-/// <param name="DoValidation"></param>
+/// <param name="SuppressValidation"></param>
 /// <param name="PreserveDecisionId"></param>
 /// <param name="MermaidOnly"></param>
+/// <param name="SuppressActivityMocking">
+/// If true then the activities will not be mocked even during the graph build.
+/// <p>This mode can be convenient if your activities are triggering other activities, which
+/// you may want to record in the graph. In this case any mocking needs to be don in the activity itself
+/// by executing alternative business logic based on the value of the <see cref="GraphBuilder.IsBuildingGraph"/> 
+/// property.
+/// Thus </p>
+/// </param>
 /// <param name="StartNode"></param>
 /// <param name="EndNode"></param>
 public record GraphBuilingContext(
@@ -36,9 +44,10 @@ public record GraphBuilingContext(
         bool ExitAfterBuildingGraph,
         string? GraphOutputFile = null,
         bool SplitNamesByWords = false,
-        bool DoValidation = true,
+        bool SuppressValidation = true,
         bool PreserveDecisionId = true,
         bool MermaidOnly = false,
+        bool SuppressActivityMocking = false,
         string StartNode = "Start",
         string EndNode = "End");
 
@@ -213,12 +222,13 @@ public class GraphBuilder : IWorkerInterceptor
                         Runtime.CurrentGraphPath.AddStep(activityName);
                         try
                         {
-                            return await base.ExecuteActivityAsync(input);
+                            if (Runtime.ClientRequest?.SuppressActivityMocking == true)
+                                return await base.ExecuteActivityAsync(input); // any mocking is to be don in the activity
                         }
                         catch
                         {
-                            return null; // returning null is OK as we are mocking the activity
                         }
+                        return null; // returning null is OK, as we are mocking the activity
                     }
                 }
                 else
@@ -332,15 +342,15 @@ public class GraphBuilder : IWorkerInterceptor
 
                     result.AppendLine(generator.ToMermaidSyntax());
 
-                    if (Runtime.ClientRequest?.DoValidation == true)
+                    if (Runtime.ClientRequest?.SuppressValidation == false)
                         result.AppendLine("--------")
                               .AppendLine(generator.ValidateGraphAgainst(workflowAssembly));
 
                     if (Runtime.ClientRequest?.GraphOutputFile?.IsNotEmpty() == true)
                     {
                         Console.WriteLine();
-                        Console.WriteLine($"The WF graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
-                        File.WriteAllText(Runtime.ClientRequest.GraphOutputFile, result.ToString());
+                        Console.WriteLine($"The {input.Instance.GetType().Name} graph is saved to `{Runtime.ClientRequest.GraphOutputFile}`.");
+                        File.AppendAllText(Runtime.ClientRequest.GraphOutputFile, result.ToString());
                     }
                     else
                     {

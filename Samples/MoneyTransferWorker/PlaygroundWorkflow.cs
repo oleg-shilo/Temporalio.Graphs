@@ -12,15 +12,15 @@ public class PlaygroundWorkflow
     public async Task<string> RunAsync(object context)
     {
         string files = await ExecuteActivityAsync(
-         (MathActivities m) => m.DiscoverFilesAsync(@".\"), options);
+         (MiscActivities m) => m.DiscoverFilesAsync(@".\"), options);
 
         foreach (var file in (files ?? "33|55").Split('|'))
         {
             await ExecuteActivityAsync(
-               (MathActivities m) => m.LockFileFileAsync(file), options);
+               (MiscActivities m) => m.LockFileAsync(file), options);
 
             await ExecuteActivityAsync(
-               (MathActivities m) => m.StartFileProcessingWorkflowAsync(file), options);
+               (MiscActivities m) => m.StartFileProcessingWorkflowAsync(file), options);
         }
 
         return "Done...";

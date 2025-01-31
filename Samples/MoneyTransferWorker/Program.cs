@@ -6,6 +6,7 @@ using Temporalio.Client;
 using Temporalio.Worker;
 using Temporalio.MoneyTransferProject.MoneyTransferWorker;
 using Temporalio.Graphs;
+using Temporalio.Testing;
 
 // Cancellation token to shutdown worker on ctrl+c
 using var tokenSource = new CancellationTokenSource();
@@ -19,7 +20,7 @@ Console.CancelKeyPress += (_, eventArgs) =>
 // Create an instance of the activities since we have "instance activities".
 // If we had all static activities, we could just reference those directly.
 var activities = new BankingActivities();
-var activities2 = new MathActivities();
+var activities2 = new MiscActivities();
 
 var interceptor = new GraphBuilder(tokenSource.Cancel);
 
@@ -30,10 +31,10 @@ var workerOptions = new TemporalWorkerOptions(taskQueue: "MONEY_TRANSFER_TASK_QU
 
 workerOptions
     .AddAllActivities<Temporalio.Graphs.GenericActivities>()
-    .AddAllActivities(activities)           // Register activities
+    .AddAllActivities(activities)          // Register activities
     .AddAllActivities(activities2)
     .AddWorkflow<MoneyTransferWorkflow>()  // Register workflow
-    .AddWorkflow<PlaygroundWorkflow>();  // Register workflow
+    .AddWorkflow<PlaygroundWorkflow>();    // Register workflow
 
 // ========================================================================================
 
@@ -44,23 +45,23 @@ if (isBuildingGraph) // graph building mode
     interceptor.ClientRequest = new Temporalio.Graphs.GraphBuilingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
-        // GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
-        SplitNamesByWords: true
+        GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
+        SplitNamesByWords: true,
+        MermaidOnly: true
+        //SuppressActivityMocking: true
         // if you need to modify edge nodes with Mermaid node syntax
         //StartNode: "s((In))",
         //EndNode: "e((Out))"
         );
 
-    // Define payment details
-    //var details = new PaymentDetails(
-    //    SourceAccount: "85-150",
-    //    TargetAccount: "43-812",
-    //    Amount: 400,
-    //    Currency: "USD",
-    //    ReferenceId: "12345"
-    //);
-    //await workerOptions.ExecuteWorkerInMemory((MoneyTransferWorkflow wf) => wf.RunAsync(details, null));
-    await workerOptions.ExecuteWorkerInMemory((PlaygroundWorkflow wf) => wf.RunAsync(null));
+    if (!string.IsNullOrEmpty(interceptor.ClientRequest.GraphOutputFile))
+    {
+        File.Delete(interceptor.ClientRequest.GraphOutputFile);
+    }
+
+    await using var env = await WorkflowEnvironment.StartLocalAsync();
+    await env.ExecuteWorker(workerOptions, (PlaygroundWorkflow wf) => wf.RunAsync(null));
+    await env.ExecuteWorker(workerOptions, (MoneyTransferWorkflow wf) => wf.RunAsync(null, null));
 }
 else // normal mode
 {

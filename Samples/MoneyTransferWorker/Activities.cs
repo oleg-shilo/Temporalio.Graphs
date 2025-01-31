@@ -6,7 +6,7 @@ using Temporalio.Graphs;
 using Temporalio.Activities;
 using Temporalio.Exceptions;
 
-public class MathActivities
+public class MiscActivities
 {
     [Activity]
     public async Task<string> StartFileProcessingWorkflowAsync(string file)
@@ -17,11 +17,17 @@ public class MathActivities
     [Activity]
     public async Task<string> DiscoverFilesAsync(string dir)
     {
-        return "a.xml|b.xml";
+        // check if we are building the graph
+        if (GraphBuilder.IsBuildingGraph)
+        {
+            return "mocked-file-1.xml|mocked-file-2.xml";
+        }
+
+        return "real-file-1.xml|real-file-2.xml";
     }
 
     [Activity]
-    public async Task<string> LockFileFileAsync(string file)
+    public async Task<string> LockFileAsync(string file)
     {
         return $"Locking file: {file}";
     }
