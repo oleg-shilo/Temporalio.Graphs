@@ -33,8 +33,8 @@ workerOptions
     .AddAllActivities<Temporalio.Graphs.GenericActivities>()
     .AddAllActivities(activities)          // Register activities
     .AddAllActivities(activities2)
-    .AddWorkflow<MoneyTransferWorkflow>()  // Register workflow
-    .AddWorkflow<PlaygroundWorkflow>();    // Register workflow
+    .AddWorkflow<MoneyTransferWorkflow>()  // Register workflows
+    .AddWorkflow<PlaygroundWorkflow>();    // Register
 
 // ========================================================================================
 
@@ -42,16 +42,13 @@ bool isBuildingGraph = args.Contains("-graph");
 
 if (isBuildingGraph) // graph building mode
 {
-    interceptor.ClientRequest = new Temporalio.Graphs.GraphBuilingContext(
+    interceptor.ClientRequest = new Temporalio.Graphs.GraphBuildingContext(
         IsBuildingGraph: true,
         ExitAfterBuildingGraph: true,
         GraphOutputFile: Path.GetFullPath(Path.Combine(typeof(MoneyTransferWorkflow).Assembly.Location, "..", "..", "..", "..", "MoneyTransferWorkflow.graph")),
         SplitNamesByWords: true,
         MermaidOnly: true
         //SuppressActivityMocking: true
-        // if you need to modify edge nodes with Mermaid node syntax
-        //StartNode: "s((In))",
-        //EndNode: "e((Out))"
         );
 
     if (!string.IsNullOrEmpty(interceptor.ClientRequest.GraphOutputFile))

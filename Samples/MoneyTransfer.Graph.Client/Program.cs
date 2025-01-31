@@ -25,8 +25,6 @@ app.MapGet("/api/workflows/{wfId}/runs/{runId}",
 
 Api.ContentRootPath = app.Environment.ContentRootPath;
 
-
-
 Task.Run(() =>
 {
     Console.WriteLine("");

@@ -22,13 +22,30 @@ namespace Temporalio.Graphs;
 /// <summary>
 /// 
 /// </summary>
-/// <param name="IsBuildingGraph"></param>
-/// <param name="ExitAfterBuildingGraph"></param>
-/// <param name="GraphOutputFile"></param>
-/// <param name="SplitNamesByWords"></param>
-/// <param name="SuppressValidation"></param>
-/// <param name="PreserveDecisionId"></param>
-/// <param name="MermaidOnly"></param>
+/// <param name="IsBuildingGraph">
+/// Flag to indicate that the workflow is running in the building-graph mode.
+/// </param>
+/// <param name="ExitAfterBuildingGraph">
+/// Flag to indicate that the workflow should stop the application after building the graph.
+/// </param>
+/// <param name="GraphOutputFile">
+/// Path to the file where the graph will be saved. If it is not specified, the graph will be 
+/// printed to the console.
+/// </param>
+/// <param name="SplitNamesByWords">
+/// Flag to indicate that the node's names should be split by words for better readability of the graph.
+/// </param>
+/// <param name="SuppressValidation">
+/// Flag to suppress abandoned activities validation when building the graph.
+/// </param>
+/// <param name="PreserveDecisionId">  
+/// Flag to preserve the decision ID in the graph.
+/// <p>Decision id embedded in the graph can be used as a key to look up the SVG node in the rendered 
+/// HTML with the graph.</p>
+/// </param>
+/// <param name="MermaidOnly">
+/// Generate only the Mermaid syntax of the graph.
+/// </param>
 /// <param name="SuppressActivityMocking">
 /// If true then the activities will not be mocked even during the graph build.
 /// <p>This mode can be convenient if your activities are triggering other activities, which
@@ -37,9 +54,16 @@ namespace Temporalio.Graphs;
 /// property.
 /// Thus </p>
 /// </param>
-/// <param name="StartNode"></param>
-/// <param name="EndNode"></param>
-public record GraphBuilingContext(
+/// <param name="StartNode">
+/// The display name of the start node name. "Start" is the default value.
+/// <p>You can overwrite it with a more meaningful value (e.g. "e((Start of file processing))")</p>
+/// </param>
+/// <param name="EndNode">
+/// The display name of the end node name. "End" is the default value.
+/// <p>You can overwrite it with a more meaningful value (e.g. "e((End of file processing))")</p>
+/// </p>
+/// </param>
+public record GraphBuildingContext(
         bool IsBuildingGraph,
         bool ExitAfterBuildingGraph,
         string? GraphOutputFile = null,
@@ -110,7 +134,7 @@ public class GraphBuilder : IWorkerInterceptor
     /// <value>
     /// The client request.
     /// </value>
-    public GraphBuilingContext ClientRequest { get; set; }
+    public GraphBuildingContext ClientRequest { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GraphBuilder"/> class.
@@ -263,13 +287,13 @@ public class GraphBuilder : IWorkerInterceptor
             }
         }
 
-        GraphBuilingContext context;
+        GraphBuildingContext context;
         /// <summary>
         /// Initializes a new instance of the <see cref="WorkflowInbound"/> class.
         /// </summary>
         /// <param name="next">The next.</param>
         /// <param name="context">The context.</param>
-        public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuilingContext context) : base(next)
+        public WorkflowInbound(WorkflowInboundInterceptor next, GraphBuildingContext context) : base(next)
         {
             this.context = context;
         }
