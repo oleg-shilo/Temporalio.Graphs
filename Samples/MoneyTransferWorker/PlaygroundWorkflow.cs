@@ -14,7 +14,7 @@ public class PlaygroundWorkflow
         string files = await ExecuteActivityAsync(
          (MathActivities m) => m.DiscoverFilesAsync(@".\"), options);
 
-        foreach (var file in files.Split('|'))
+        foreach (var file in (files ?? "33|55").Split('|'))
         {
             await ExecuteActivityAsync(
                (MathActivities m) => m.LockFileFileAsync(file), options);
