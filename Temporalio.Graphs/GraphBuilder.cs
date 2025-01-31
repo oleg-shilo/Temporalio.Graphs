@@ -211,35 +211,7 @@ public class GraphBuilder : IWorkerInterceptor
                     {
                         // mocked normal activity
                         Runtime.CurrentGraphPath.AddStep(activityName);
-
-                        // trying to create a default instance of the return type of the activity if fails then return null
-                        try
-                        {
-                            var type = activityMethod.ReturnType;
-                            var isTask = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>);
-                            if (isTask)
-                            {
-                                object? result = null;
-
-                                // string is a special case when we know the default constructor will fail
-                                if (type.GetGenericArguments()[0] == typeof(string))
-                                    result = Activator.CreateInstance(type.GetGenericArguments()[0], "".ToArray());
-                                else
-                                    result = Activator.CreateInstance(type.GetGenericArguments()[0]);
-
-                                return Task.FromResult(result);
-                            }
-                            else
-                            {
-                                return activityMethod.ReturnType.IsValueType
-                                    ? Activator.CreateInstance(activityMethod.ReturnType)
-                                    : null;
-                            }
-                        }
-                        catch
-                        {
-                            return null;
-                        }
+                        return null; // returning null as we are mocking the activity
                     }
                 }
                 else
