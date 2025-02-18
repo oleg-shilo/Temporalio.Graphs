@@ -1,4 +1,4 @@
-_The project has been endorsed on the Temporal own Code-Exchange portal: https://temporal.io/code-exchange/temporalio-graphs_
+_The project has been endorsed on Temporal's own [Code-Exchange portal](https://temporal.io/code-exchange/temporalio-graphs)._
 
 ---
 
